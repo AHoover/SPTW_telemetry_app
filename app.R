@@ -96,7 +96,7 @@ ui <- fluidPage(
                 ),
                br(),
                br(),
-                fluidRow(column(width = 2), column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2021): MarineRegions.org. Available online at ", a("www.marineregions.org", href = "https://www.marineregions.org/", .noWS = "outside"),")" ,style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
+                fluidRow(column(width = 2), column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", .noWS = "outside"), ").", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
                     width = 8)),
                br(),
                br(),
