@@ -22,8 +22,8 @@ library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stri
 ## Define year and month of interest for prediction
 
 source('data/define_year_month.R')
-predictyear <<- '2020'
-predictmonth <<- 'December'
+predictyear <<- '2021'
+predictmonth <<- 'January'
 
 define_year_month(predictyear, str_pad(match(predictmonth,month.name), 2, pad='0'))
 file_dater <- paste0(year,"_",month)
@@ -127,7 +127,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                              div(img(src = paste0("sst_05deg_",year,"_",month,"_telemetry.jpg"), height = '600px', width = '800px'),style = "text-align: center"), 
+                              div(img(src = paste0("sst_05deg_",year,"_",month,".jpg"), height = '600px', width = '800px'),style = "text-align: center"), 
                                     column(p("Sea Surface Temperature (\u00B0C) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
@@ -137,7 +137,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                                  div(img(src = paste0("fpi_05deg_", file_dater, "_CTMC.jpg"), align='center', height = '600px', width = '800px'), style = "text-align: center"),
+                                  div(img(src = paste0("fpi_05deg_", file_dater, ".jpg"), align='center', height = '600px', width = '800px'), style = "text-align: center"),
                                       column(p("Front Density along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width=12),
                                     width = 12),
                     br(),
@@ -147,7 +147,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                                  div(img(src = paste0("ssh_05deg_",year,"_",month,"_telemetry.jpg"),align='center', height = '600px', width = '800px'), style="text-align: center"),
+                                  div(img(src = paste0("ssh_05deg_",year,"_",month,".jpg"),align='center', height = '600px', width = '800px'), style="text-align: center"),
                                       column(p("Sea Surface Height (SSH) (m) (absolute height) along the Eastern Pacific with Exclusive Economic Zones (shown in gray); data generated using E.U. Copernicus Marine Service Information", style="text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
@@ -157,7 +157,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                                div(img(src = "bathy_05deg_telemetry.jpg", align = 'center', height = '600px', width = '800px'), style = "text-align: center"),
+                                div(img(src = "bathy_05deg.jpg", align = 'center', height = '600px', width = '800px'), style = "text-align: center"),
                                        column(p("Bathymetry (m) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
