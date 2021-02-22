@@ -42,6 +42,19 @@ SPshpallsubset <- read_rds("data/SPshpallsubset.rds")
 
 countriessubset <- read_rds("data/countriessubset.rds") 
 
+## Load Center on Biological Diversity's 
+## Ecologically or Biologically Significant Marine Areas (EBSAs)
+
+EBSA_all <- read_rds("data/EBSAs_CBD.rds") 
+
+### Subset to allow for desired mapping 
+
+ebsas <- EBSA_all[-which(EBSA_all$NAME == 'Costa Rica Dome'|EBSA_all$NAME == 'Galapagos'|EBSA_all$NAME == 'Peru Upwelling Cores'|EBSA_all$NAME == 'Cordillera Malpelo'),]
+
+ebsas_small <- EBSA_all[which(EBSA_all$NAME == 'Galapagos'|EBSA_all$NAME == 'Peru Upwelling Cores'|EBSA_all$NAME == 'Cordillera Malpelo'),]
+
+CRD <- EBSA_all[which(EBSA_all$NAME == 'Costa Rica Dome'),]
+
 ########
 
 
@@ -188,9 +201,26 @@ server <- shinyServer(function(input,output,session) {
     leaflet() %>% addTiles() %>%
     addRasterImage(predictraster, colors = palpredict, opacity = 0.8, maxBytes = 40 * 1024 * 1024, project = TRUE) %>% # Use FALSE if error in palette occurs
     addLegend(pal = palpredict,values = values(predictraster), title = "Residence <br>Time (Days)") %>%
-    addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.8, fillOpacity = 0.5, label = ~geoname,color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE)) %>%
-    addPolygons(data = countriessubset, weight = 1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE))
-    
+      addMapPane("country", zIndex = 400) %>% 
+      addMapPane("EBSAs", zIndex = 420) %>% 
+      addMapPane("EBSAs_small", zIndex = 430) %>% 
+      addMapPane("EEZ", zIndex = 410) %>% 
+      addPolygons(data = ebsas, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5,bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
+      addPolygons(data = ebsas_small, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
+      addPolygons(data = CRD, weight=1.5,label=~NAME, fillOpacity = 0.5,color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
+      addPolygons(data = SPshpallsubset, weight=1.5,  opacity = 0.8, fillOpacity = 0.5, label=~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
+      addPolygons(data = countriessubset, weight=1.5,label=~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country")) %>% 
+      # Add layer controls
+      addLayersControl(
+        #baseGroups = c("OSM (default)", "Toner", "Toner Lite"),
+        overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "EEZs"),
+        options = layersControlOptions(collapsed = FALSE)) %>% 
+      hideGroup("EBSAs") %>% 
+      htmlwidgets::onRender("
+        function() {
+            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center\">Areas of Interest</label>');
+        }
+    ")
   })
 
 })
