@@ -79,9 +79,9 @@ ui <- fluidPage(
     "))
   ),
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
-    navbarPage("Eastern Pacific Leatherback Movement",
+    navbarPage(title = div(img(src = 'upwell_green_gray.png', style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
                  
-               tabPanel('Prediction',
+               tabPanel('Prediction Map',
                         
                         fluidRow(column(width = 2),
                           column(
