@@ -11,7 +11,7 @@ options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer)
 
 ########
 
@@ -59,6 +59,10 @@ CRD <- EBSA_all[which(EBSA_all$NAME == 'Costa Rica Dome'),]
 
 allmpas <- read_rds("data/MPAs_WDPA.rds")
 
+## Load GFW Fishing Effort at 0.1 degrees for 2012-2016
+
+fisheries = stack("data/Effort_Fishing_01deg_2012-2016.tif")
+names(fisheries) = paste0(c("Effort2012","Effort2013","Effort2014","Effort2015","Effort2016"))
 
 ########
 
@@ -84,26 +88,43 @@ ui <- fluidPage(
     "))
   ),
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
-    navbarPage(title = div(img(src = 'upwell_green_gray.png', style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
+    navbarPage(title = div(img(src = "upwell_green_gray.png", style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
                  
-               tabPanel('Prediction Map',
+               tabPanel("Prediction Map",
                         
                         fluidRow(column(width = 2),
                           column(
                             br(),
-                            p(h2('Predicting Eastern Pacific Leatherback Movement Using Telemetry Data',style = "color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight: bold")),
+                            p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
                             br(),
                                    p("South Pacific TurtleWatch uses methods based upon",
-                                     a(href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"),target = "_blank"),style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size: 110%"),width = 8)),
+                                     a(href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"),style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8)),
                             br(),
                             hr(),
-                            h2(p(predictmonth,predictyear,style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold")),
+                        fluidRow(column(width = 2),
+                          column(width = 8,
+                            h2(p(predictmonth,predictyear,style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold"))),
+                          column(width = 2, a("Download SPTW Data", href = "https://github.com/AHoover/SPTW_telemetry_app/"), style = "text-align:center;color:black;background-color:lavender;padding:1px;border-radius:10px;font-size:110%")),
                             br(),
   
                sidebarLayout(
                  sidebarPanel(
-                   a("Download SPTW Data",href = "https://github.com/AHoover/SPTW_telemetry_app/"),
-                   style = "padding:15px;border:white;background-color:lavender", width = 2), 
+                   p("Global Fishing Watch (GFW) Fishing Data"), style="border:white; background-color:lavendar;font-size:115%;font-color:#3c4b57;padding:15px;font-align:center;padding-top:10px", width = 2,
+                   hr(style = "border-color:#cd6ebe;opacity:0.8"),
+                   
+                   selectInput(inputId = "Fisheries", label = p(strong("Yearly Fishing Effort")), choices = c("2016" = 5, "2015" = 4, "2014" = 3, "2013" = 2, "2012" = 1), selected = "2016"),
+                   checkboxInput("PlotFisheries", "Add Fishing Effort", FALSE),
+                   hr(style = "border-color:#cd6ebe;opacity:0.2"),
+                   checkboxInput("ChangePlotRange", "Add Fishing Effort > 0.1", FALSE),
+                   selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
+                   br(),
+                   div(style="display:inline-block;width:10%",
+                       actionButton(inputId = "hideFisheries",
+                         label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a;")), align = 'center',
+                   br(),
+                   hr(style="border-color:#cd6ebe;opacity:0.2"),
+                   p("GFW data are based on vessel AIS, thus representing a minimum estimate of fishing occurring in these areas (e.g. dependent on satellite coverage and AIS usage). More information can be found below.", style = "font-size:65%;font-color:#3c4b57;padding:5px")
+                   ), 
                   mainPanel(
                     fluidRow(
                       column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), leafletOutput("prediction", height = '600px'),width = 12,absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);border-radius:0px", tags$b(tags$em("::Under Construction - Experimental Product::"))))))),
