@@ -103,8 +103,9 @@ ui <- fluidPage(
                             hr(),
                         fluidRow(column(width = 2),
                           column(width = 8,
-                            h2(p(predictmonth,predictyear,style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold"))),
-                          column(width = 2, a("Download SPTW Data", href = "https://github.com/AHoover/SPTW_telemetry_app/"), style = "text-align:center;color:black;background-color:lavender;padding:1px;border-radius:10px;font-size:110%")),
+                            h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold"))),
+                            br(),
+                          column(width = 2, a("Download SPTW Data", href = "https://github.com/AHoover/SPTW_telemetry_app/"), style = "text-align:center;color:black;background-color:lavender;padding:10px;border-radius:10px;font-size:110%")),
                             br(),
   
                sidebarLayout(
@@ -112,7 +113,7 @@ ui <- fluidPage(
                    p("Global Fishing Watch (GFW) Fishing Data"), style="border:white; background-color:lavendar;font-size:115%;font-color:#3c4b57;padding:15px;font-align:center;padding-top:10px", width = 2,
                    hr(style = "border-color:#cd6ebe;opacity:0.8"),
                    
-                   selectInput(inputId = "Fisheries", label = p(strong("Yearly Fishing Effort")), choices = c("2016" = 5, "2015" = 4, "2014" = 3, "2013" = 2, "2012" = 1), selected = "2016"),
+                   selectInput(inputId = "Fisheries", label = p(strong("Yearly Fishing Effort (hr/km^2)"), style="font-align:center"), choices = c("2016" = 5, "2015" = 4, "2014" = 3, "2013" = 2, "2012" = 1), selected = "2016"),
                    checkboxInput("PlotFisheries", "Add Fishing Effort", FALSE),
                    hr(style = "border-color:#cd6ebe;opacity:0.2"),
                    checkboxInput("ChangePlotRange", "Add Fishing Effort > 0.1", FALSE),
@@ -120,22 +121,22 @@ ui <- fluidPage(
                    br(),
                    div(style="display:inline-block;width:10%",
                        actionButton(inputId = "hideFisheries",
-                         label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a;")), align = 'center',
+                         label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a;")),
                    br(),
                    hr(style="border-color:#cd6ebe;opacity:0.2"),
                    p("GFW data are based on vessel AIS, thus representing a minimum estimate of fishing occurring in these areas (e.g. dependent on satellite coverage and AIS usage). More information can be found below.", style = "font-size:65%;font-color:#3c4b57;padding:5px")
                    ), 
                   mainPanel(
                     fluidRow(
-                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), leafletOutput("prediction", height = '600px'),width = 12,absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);border-radius:0px", tags$b(tags$em("::Under Construction - Experimental Product::"))))))),
+                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), leafletOutput("prediction", height = '625px'),width = 12,absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);border-radius:0px", tags$b(tags$em("::Under Construction - Experimental Product::"))))))),
                     fluidRow(
                       br(),
-                      column(p("Leatherback Residence Time (Days) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12)),
+                      column(p("Leatherback Residence Time (Days) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size:105%"), width = 12)),
                       )
                 ),
                br(),
                br(),
-                fluidRow(column(width = 2), column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", .noWS = "outside"), ").", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
+                fluidRow(column(width = 2), column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
                     width = 8)),
                br(),
                br(),
@@ -186,7 +187,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                                  div(img(src = paste0("ssh_05deg_",year,"_",month,".jpg"),align='center', height = '600px', width = '800px'), style="text-align: center"),
+                                  div(img(src = paste0("ssh_05deg_",year,"_",month,".jpg"), align='center', height = '600px', width = '800px'), style="text-align: center"),
                                       column(p("Sea Surface Height (SSH) (m) (absolute height) along the Eastern Pacific with Exclusive Economic Zones (shown in gray); data generated using E.U. Copernicus Marine Service Information", style="text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
@@ -225,7 +226,7 @@ server <- shinyServer(function(input,output,session) {
   output$prediction <- renderLeaflet({
     
     leaflet() %>% addTiles() %>%
-    addRasterImage(predictraster, colors = palpredict, opacity = 0.8, maxBytes = 40 * 1024 * 1024, project = TRUE) %>% # Use FALSE if error in palette occurs
+    addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE) %>% # Use FALSE if error in palette occurs
     addLegend(pal = palpredict,values = values(predictraster), title = "Residence <br>Time (Days)") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
@@ -251,6 +252,57 @@ server <- shinyServer(function(input,output,session) {
         }
     ")
   })
+
+  filteredmap <- reactive({
+
+    fisheries[[as.numeric(input$Fisheries)]]
+
+  })
+
+  proxy <- leafletProxy("prediction")
+
+  observeEvent(input$PlotFisheries, {
+
+    setbins <- c(0, 0.1, 0.5, 1, 2.5, 5, 10, 15, 20, 22)
+    colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = setbins, na.color = "transparent")})
+
+    #Always clear the group first on the observed event
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
+
+    if(input$PlotFisheries){
+      observe({
+        pal <- colorpal()
+        proxy %>%
+          removeControl(legend) %>% # Removes legend on year change
+          addRasterImage(filteredmap(), color = pal, opacity = 0.6, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+    }
+  })
+
+  observeEvent(input$ChangePlotRange, {
+
+    setbins <- c(0.1, 0.5, 1, 2.5, 5, 10, 15, 20, 22);
+    colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = setbins, na.color = "transparent")})
+
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
+    
+    if(input$ChangePlotRange){
+      observe({
+        pal <- colorpal()
+        proxy %>%
+          removeControl(legend) %>% # Removes legend on year change
+          addRasterImage(filteredmap(), color = pal, opacity = 0.6, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addLegend(pal = pal, values = values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+    }
+  })
+
+  observeEvent(input$hideFisheries, {
+    leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
+
+    updateCheckboxInput(session = session, inputId = "PlotFisheries", value = is.null(input$PlotFisheries))
+    updateCheckboxInput(session = session, inputId = "ChangePlotRange", value = is.null(input$ChangePlotRange))
+  })
+
 
 })
 
