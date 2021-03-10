@@ -105,7 +105,7 @@ ui <- fluidPage(
                           column(width = 8,
                             h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold"))),
                             br(),
-                          column(width = 2, a("Download SPTW Data", href = "https://github.com/AHoover/SPTW_telemetry_app/"), style = "text-align:center;color:black;background-color:lavender;padding:10px;border-radius:10px;font-size:110%")),
+                          column(width = 2, a("Download SPTW Data", href = "https://github.com/AHoover/SPTW_telemetry_app/"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%")),
                             br(),
   
                sidebarLayout(
@@ -123,6 +123,8 @@ ui <- fluidPage(
                        actionButton(inputId = "hideFisheries",
                          label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a;")),
                    br(),
+                   br(),
+                   sliderInput("opacity", HTML("Residence Time Opacity <br/>(No Map &#8596 Visible Map)"), style = "font-size:95%", min = 0, max = 1, value = 0.7, step = 0.1),
                    hr(style="border-color:#cd6ebe;opacity:0.2"),
                    p("GFW data are based on vessel AIS, thus representing a minimum estimate of fishing occurring in these areas (e.g. dependent on satellite coverage and AIS usage). More information can be found below.", style = "font-size:65%;font-color:#3c4b57;padding:5px")
                    ), 
@@ -226,7 +228,7 @@ server <- shinyServer(function(input,output,session) {
   output$prediction <- renderLeaflet({
     
     leaflet() %>% addTiles() %>%
-    addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE) %>% # Use FALSE if error in palette occurs
+    addRasterImage(predictraster, colors = palpredict, opacity = input$opacity, maxBytes = 40 * 1024 * 1024, project = TRUE) %>% # Use FALSE if error in palette occurs
     addLegend(pal = palpredict,values = values(predictraster), title = "Residence <br>Time (Days)") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
@@ -239,7 +241,7 @@ server <- shinyServer(function(input,output,session) {
       addPolygons(data = SPshpallsubset, weight=1.5,  opacity = 0.8, fillOpacity = 0.5, label=~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
       addPolygons(data = allmpas, weight=1.5,  opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
       addPolygons(data = countriessubset, weight=1.5, label=~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country")) %>% 
-      setView(-105, -3, zoom = 3) %>% 
+      setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
       addLayersControl(
         #baseGroups = c("OSM (default)", "Toner", "Toner Lite"),
