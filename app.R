@@ -228,14 +228,14 @@ server <- shinyServer(function(input,output,session) {
   output$prediction <- renderLeaflet({
     
     leaflet() %>% addTiles() %>%
-    addRasterImage(predictraster, colors = palpredict, opacity = input$opacity, maxBytes = 40 * 1024 * 1024, project = TRUE) %>% # Use FALSE if error in palette occurs
+    addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>% # Use FALSE if error in palette occurs
     addLegend(pal = palpredict,values = values(predictraster), title = "Residence <br>Time (Days)") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
       addMapPane("EBSAs_small", zIndex = 430) %>% 
       addMapPane("EEZ", zIndex = 410) %>% 
       addMapPane("MPAs", zIndex = 430) %>%
-      addPolygons(data = ebsas, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5,bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
+      addPolygons(data = ebsas, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
       addPolygons(data = ebsas_small, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
       addPolygons(data = CRD, weight=1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
       addPolygons(data = SPshpallsubset, weight=1.5,  opacity = 0.8, fillOpacity = 0.5, label=~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
@@ -263,6 +263,11 @@ server <- shinyServer(function(input,output,session) {
 
   proxy <- leafletProxy("prediction")
 
+  observeEvent(input$opacity, {
+    proxy %>% clearGroup(group = "predictionmap") %>%
+      addRasterImage(predictraster, colors = palpredict, opacity = input$opacity, maxBytes=40 * 1024 * 1024, group = "predictionmap")
+  })
+  
   observeEvent(input$PlotFisheries, {
 
     setbins <- c(0, 0.1, 0.5, 1, 2.5, 5, 10, 15, 20, 22)
