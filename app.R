@@ -235,12 +235,12 @@ server <- shinyServer(function(input,output,session) {
       addMapPane("EBSAs_small", zIndex = 430) %>% 
       addMapPane("EEZ", zIndex = 410) %>% 
       addMapPane("MPAs", zIndex = 430) %>%
-      addPolygons(data = ebsas, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
+      addPolygons(data = ebsas, weight=1.5, label = ~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
       addPolygons(data = ebsas_small, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
       addPolygons(data = CRD, weight=1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
-      addPolygons(data = SPshpallsubset, weight=1.5,  opacity = 0.8, fillOpacity = 0.5, label=~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
-      addPolygons(data = allmpas, weight=1.5,  opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
-      addPolygons(data = countriessubset, weight=1.5, label=~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country")) %>% 
+      addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
+      addPolygons(data = allmpas, weight = 1.5, opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
+      addPolygons(data = countriessubset, weight=1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country")) %>% 
       setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
       addLayersControl(
@@ -281,7 +281,7 @@ server <- shinyServer(function(input,output,session) {
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.6, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.8, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
           addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
@@ -298,7 +298,7 @@ server <- shinyServer(function(input,output,session) {
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.6, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.8, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
           addLegend(pal = pal, values = values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
