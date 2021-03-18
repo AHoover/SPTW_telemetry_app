@@ -90,6 +90,18 @@ ui <- fluidPage(
     font: 'Montserrat';
     font-size: 26px;
     }
+    .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
+    color: #a2b03a;
+    /* color: black; */
+    box-shadow: 3px 2px 8px 0px #3c4b57;
+    font-weight: bold;
+    font-size:105%;
+    }
+    .navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>a:hover {
+    color: #ffb93f;
+    background-color: transparent;
+    font-weight: bold;
+    }
     "))
   ),
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
@@ -113,20 +125,27 @@ ui <- fluidPage(
                          
                sidebarLayout(
                  sidebarPanel(
-                   p("Global Fishing Watch (GFW) Fishing Data", style = "text-align:center"), style="border:white; background-color:lavendar;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", width = 2,
+                   p("Global Fishing Watch (GFW) Fishing Data", style = "text-align:center"), style = "border:white; background-color:lavendar;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", width = 2,
                    hr(style = "border-color:#cd6ebe;opacity:0.8;margin-top:10px;margin-bottom:20px;"),
+                   tags$head(
+                     tags$style(HTML(
+                       ".checkbox {margin:0;text-align:left}
+                        .checkbox p {margin:0;text-align:left}
+                        .shiny-input-container {margin-bottom:0}
+                        .control-label {text-align:center;margin-bottom:0}
+                        .label {text-align:center}
+                        .shiny-input-container {text-align:center}"))),
                    selectInput(inputId = "Fisheries", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2016" = 5, "2015" = 4, "2014" = 3, "2013" = 2, "2012" = 1), selected = "2016"),
                    checkboxInput("PlotFisheries", "Add Fishing Effort", FALSE),
                    hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:10px;"),
                    checkboxInput("ChangePlotRange", "Add Fishing Effort > 0.1", FALSE),
                    selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
                    hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
-                   selectInput(inputId = "Fishinggear", label = "2016 Fishing Effort by Gear (hr/km^2)", choices = c("","Trawlers" = 6, "Drifting longlines" = 1, "Fixed gear" = 2, "Other fishing" = 3, "Purse seines" = 4, "Squid jigger" = 5), selected = "Trawlers"),
+                   selectInput(inputId = "Fishinggear", label = "2016 Fishing Effort by Gear (hr/km^2)", choices = c("Trawlers" = 6, "Drifting longlines" = 1, "Fixed gear" = 2, "Other fishing" = 3, "Purse seines" = 4, "Squid jigger" = 5), selected = "Trawlers"),
                    checkboxInput("PlotGear", "Plot 2016 Fishing Effort by Gear", FALSE),
                    tags$head(tags$style(type = "text/css", ".shiny-input-container {margin-bottom: 0px;}",".checkbox {margin-bottom: 0px;}")),
                    p("(May be slow to plot)", style = "font-size:75%;font-color:#757575;padding:0.1px;text-align:center"),
-                   br(),
-                   div(style="display:inline-block;width:10%",
+                   div(style = "display:inline-block;width:10%;margin-left:5%;max-width:100%;",
                        actionButton(inputId = "hideFisheries",
                          label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a")),
                    br(),
