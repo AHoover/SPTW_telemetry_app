@@ -11,7 +11,7 @@ options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS)
 
 ########
 
@@ -64,6 +64,11 @@ allmpas <- read_rds("data/MPAs_WDPA.rds")
 fisheries = stack("data/Effort_Fishing_01deg_2012-2016.tif")
 names(fisheries) = paste0(c("Effort2012","Effort2013","Effort2014","Effort2015","Effort2016"))
 
+## Load GFW 2016 Fishing Effort by Gear for 2016
+
+gear2016 = stack("data/Effort_FishingByGear_01deg_2016.tif")
+names(gear2016) = c("Drifting_longlines", "Fixed_gear", "Other_fishing", "Purse_seines", "Squid_jigger", "Trawlers")
+
 ########
 
 
@@ -103,25 +108,27 @@ ui <- fluidPage(
                             hr(),
                         fluidRow(column(width = 2),
                           column(width = 8,
-                            h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold"))),
+                            h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold")))),
                             br(),
-                          column(width = 2, a("Download SPTW Data", href = "https://github.com/AHoover/SPTW_telemetry_app/"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%")),
-                            br(),
-  
+                         
                sidebarLayout(
                  sidebarPanel(
-                   p("Global Fishing Watch (GFW) Fishing Data"), style="border:white; background-color:lavendar;font-size:115%;font-color:#3c4b57;padding:15px;font-align:center;padding-top:10px", width = 2,
-                   hr(style = "border-color:#cd6ebe;opacity:0.8"),
-                   
-                   selectInput(inputId = "Fisheries", label = p(strong("Yearly Fishing Effort (hr/km^2)"), style="font-align:center"), choices = c("2016" = 5, "2015" = 4, "2014" = 3, "2013" = 2, "2012" = 1), selected = "2016"),
+                   p("Global Fishing Watch (GFW) Fishing Data", style = "text-align:center"), style="border:white; background-color:lavendar;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", width = 2,
+                   hr(style = "border-color:#cd6ebe;opacity:0.8;margin-top:10px;margin-bottom:20px;"),
+                   selectInput(inputId = "Fisheries", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2016" = 5, "2015" = 4, "2014" = 3, "2013" = 2, "2012" = 1), selected = "2016"),
                    checkboxInput("PlotFisheries", "Add Fishing Effort", FALSE),
-                   hr(style = "border-color:#cd6ebe;opacity:0.2"),
+                   hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:10px;"),
                    checkboxInput("ChangePlotRange", "Add Fishing Effort > 0.1", FALSE),
                    selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
+                   hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
+                   selectInput(inputId = "Fishinggear", label = "2016 Fishing Effort by Gear (hr/km^2)", choices = c("","Trawlers" = 6, "Drifting longlines" = 1, "Fixed gear" = 2, "Other fishing" = 3, "Purse seines" = 4, "Squid jigger" = 5), selected = "Trawlers"),
+                   checkboxInput("PlotGear", "Plot 2016 Fishing Effort by Gear", FALSE),
+                   tags$head(tags$style(type = "text/css", ".shiny-input-container {margin-bottom: 0px;}",".checkbox {margin-bottom: 0px;}")),
+                   p("(May be slow to plot)", style = "font-size:75%;font-color:#757575;padding:0.1px;text-align:center"),
                    br(),
                    div(style="display:inline-block;width:10%",
                        actionButton(inputId = "hideFisheries",
-                         label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a;")),
+                         label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a")),
                    br(),
                    br(),
                    sliderInput("opacity", HTML("Residence Time Opacity <br/>(No Map &#8596 Visible Map)"), min = 0, max = 1, value = 0.7, step = 0.1),
@@ -130,7 +137,11 @@ ui <- fluidPage(
                    ), 
                   mainPanel(
                     fluidRow(
-                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 0.8, hide.ui = FALSE, proxy.height = '625px'), width = 12, absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);border-radius:0px", tags$b(tags$em("::Under Construction - Experimental Product::"))))))),
+                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 0.8, hide.ui = FALSE, proxy.height = '625px'), width = 10, absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);margin-right:20px;margin-left:10px", tags$b(tags$em("::Under Construction - Experimental Product::")))))),
+                      br(),
+                      column(width = 2, 
+                             a("Download SPTW Data", href = "https://github.com/AHoover/SPTW_telemetry_app/"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"),
+                    br(),),
                     fluidRow(
                       br(),
                       column(p("Leatherback Residence Time (Days) along the Eastern Pacific with Exclusive Economic Zones (shown in gray) and Costa Rica Dome important leatherback habitat (shown in light blue)", style = "text-align:center;color:#A2B03A;padding:2px;font-size:105%"), width = 12)),
@@ -236,11 +247,11 @@ server <- shinyServer(function(input,output,session) {
       addMapPane("EEZ", zIndex = 410) %>% 
       addMapPane("MPAs", zIndex = 430) %>%
       addPolygons(data = ebsas, weight=1.5, label = ~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
-      addPolygons(data = ebsas_small, weight=1.5,label=~NAME, fillOpacity = 0.3,color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
-      addPolygons(data = CRD, weight=1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
+      addPolygons(data = ebsas_small, weight = 1.5,label=~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
+      addPolygons(data = CRD, weight = 1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
       addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
       addPolygons(data = allmpas, weight = 1.5, opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
-      addPolygons(data = countriessubset, weight=1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country")) %>% 
+      addPolygons(data = countriessubset, weight = 1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country")) %>% 
       setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
       addLayersControl(
@@ -260,6 +271,13 @@ server <- shinyServer(function(input,output,session) {
     fisheries[[as.numeric(input$Fisheries)]]
 
   })
+  
+  filteredgear <- reactive({
+
+     gear2016[[as.numeric(input$Fishinggear)]]
+
+   })
+  
 
   proxy <- leafletProxy("prediction")
 
@@ -281,7 +299,7 @@ server <- shinyServer(function(input,output,session) {
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.8, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
           addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
@@ -298,8 +316,27 @@ server <- shinyServer(function(input,output,session) {
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.8, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
           addLegend(pal = pal, values = values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+    }
+  })
+  
+  observeEvent(input$PlotGear, {
+    
+    setbins <- c(0, 0.1, 0.5, 1, 2.5, 5, 10, 15)
+    paletterev <- rev(viridis(6))
+    colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = setbins, na.color = "transparent")})
+    
+    #Always clear the group first on the observed event
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
+    
+    if(input$PlotGear){
+      observe({
+        pal <- colorpal()
+        proxy %>%
+          removeControl(legend) %>% # Removes legend on year change
+          addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addLegend(pal = pal, values = values(filteredgear()), title = paste("2016 Fishing Effort <br> ",sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
 
@@ -308,6 +345,7 @@ server <- shinyServer(function(input,output,session) {
 
     updateCheckboxInput(session = session, inputId = "PlotFisheries", value = is.null(input$PlotFisheries))
     updateCheckboxInput(session = session, inputId = "ChangePlotRange", value = is.null(input$ChangePlotRange))
+    updateCheckboxInput(session=session, inputId="PlotGear", value = is.null(input$PlotGear))
   })
 
 
