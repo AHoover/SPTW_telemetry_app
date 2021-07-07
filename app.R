@@ -23,14 +23,14 @@ library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stri
 
 source('data/define_year_month.R')
 predictyear <<- '2021'
-predictmonth <<- 'April'
+predictmonth <<- 'May'
 
 define_year_month(predictyear, str_pad(match(predictmonth,month.name), 2, pad='0'))
 file_dater <- paste0(year,"_",month)
 
 ## Load Prediction; set color palette
 
-filename_predict <- paste0("data/Prediction_", tolower(month.abb[as.numeric(month)]), year, "_0.1deg.tif")
+filename_predict <- paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.tif") # Alternatively, tolower(month.abb[as.numeric(month)]) if lowercase month
 
 predictraster <- raster(filename_predict)
 palpredict <- colorNumeric("magma", values(predictraster), reverse=FALSE, na.color = "transparent")
