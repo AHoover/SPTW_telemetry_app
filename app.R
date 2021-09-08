@@ -64,15 +64,22 @@ allmpas <- read_rds("data/MPAs_WDPA.rds")
 # fisheries = stack("data/Effort_Fishing_01deg_2012-2016.tif")
 # names(fisheries) = paste0(c("Effort2012","Effort2013","Effort2014","Effort2015","Effort2016"))
 
+## Load GFW Fishing Effort by Gear for 2016
+
+# gear2016 = stack("data/Effort_FishingByGear_01deg_2016.tif")
+# names(gear2016) = c("Drifting_longlines", "Fixed_gear", "Other_fishing", "Purse_seines", "Squid_jigger", "Trawlers")
+
 ## Load GFW Fishing Effort at 0.1 degrees for 2017-2020
 
 fisheries = stack("data/Effort_Fishing_01deg_2017-2020.tif")
 names(fisheries) = paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"))
 
-## Load GFW 2016 Fishing Effort by Gear for 2016
+## Load GFW Fishing Effort by Gear for 2020
 
-gear2016 = stack("data/Effort_FishingByGear_01deg_2016.tif")
-names(gear2016) = c("Drifting_longlines", "Fixed_gear", "Other_fishing", "Purse_seines", "Squid_jigger", "Trawlers")
+gear2020 = stack("data/Effort_FishingByGear_01deg_2020.tif")
+names(gear2020) = c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
+
+
 
 ########
 
@@ -163,8 +170,8 @@ ui <- fluidPage(
                    checkboxInput("ChangePlotRange", "Add Fishing Effort > 0.1", FALSE),
                    selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
                    hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
-                   selectInput(inputId = "Fishinggear", label = "2016 Fishing Effort by Gear (hr/km^2)", choices = c("Trawlers" = 6, "Drifting longlines" = 1, "Fixed gear" = 2, "Other fishing" = 3, "Purse seines" = 4, "Squid jigger" = 5), selected = "Trawlers"),
-                   checkboxInput("PlotGear", "Plot 2016 Fishing Effort by Gear", FALSE),
+                   selectInput(inputId = "Fishinggear", label = "2020 Fishing Effort by Gear (hr/km^2)", choices = c("Drifting longlines" = 7, "Tuna purse seines" = 6, "Squid jigger" = 2, "Purse seines" = 8, "Other purse seines" = 5, "Pole and line" = 9, "Set longlines" = 4, "Trawlers" = 3, "Trollers" = 11, "Set gillnets" = 10, "Fishing" = 1), selected = "Trollers"),
+                   checkboxInput("PlotGear", "Plot 2020 Fishing Effort by Gear", FALSE),
                    tags$head(tags$style(type = "text/css", ".shiny-input-container {margin-bottom: 0px;}",".checkbox {margin-bottom: 0px;}")),
                    p("(May be slow to plot)", style = "font-size:75%;font-color:#757575;padding:0.1px;text-align:center"),
                    div(style = "display:inline-block;width:10%;margin-left:5%;max-width:100%;",
@@ -326,7 +333,7 @@ server <- shinyServer(function(input,output,session) {
   
   filteredgear <- reactive({
 
-     gear2016[[as.numeric(input$Fishinggear)]]
+     gear2020[[as.numeric(input$Fishinggear)]]
 
    })
   
@@ -358,8 +365,7 @@ server <- shinyServer(function(input,output,session) {
   
   observeEvent(input$PlotFisheries, {
 
-    setbins <- c(0, 0.1, 0.5, 1, 2.5, 5, 10, 15, 20, 22)
-    colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = setbins, na.color = "transparent")})
+    colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
 
     #Always clear the group first on the observed event
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
@@ -376,8 +382,7 @@ server <- shinyServer(function(input,output,session) {
 
   observeEvent(input$ChangePlotRange, {
 
-    setbins <- c(0.1, 0.5, 1, 2.5, 5, 10, 15, 20, 22);
-    colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = setbins, na.color = "transparent")})
+    colorpal <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
 
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
     
@@ -393,9 +398,8 @@ server <- shinyServer(function(input,output,session) {
   
   observeEvent(input$PlotGear, {
     
-    setbins <- c(0, 0.1, 0.5, 1, 2.5, 5, 10, 15)
     paletterev <- rev(viridis(6))
-    colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = setbins, na.color = "transparent")})
+    colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 120, ceiling(max(values(filteredgear()),na.rm=T))), na.color = "transparent")})
     
     #Always clear the group first on the observed event
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
@@ -406,7 +410,7 @@ server <- shinyServer(function(input,output,session) {
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
           addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
-          addLegend(pal = pal, values = values(filteredgear()), title = paste("2016 Fishing Effort <br> ",sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ",sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
 
