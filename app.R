@@ -11,7 +11,7 @@ options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets)
 
 ########
 
@@ -61,8 +61,13 @@ allmpas <- read_rds("data/MPAs_WDPA.rds")
 
 ## Load GFW Fishing Effort at 0.1 degrees for 2012-2016
 
-fisheries = stack("data/Effort_Fishing_01deg_2012-2016.tif")
-names(fisheries) = paste0(c("Effort2012","Effort2013","Effort2014","Effort2015","Effort2016"))
+# fisheries = stack("data/Effort_Fishing_01deg_2012-2016.tif")
+# names(fisheries) = paste0(c("Effort2012","Effort2013","Effort2014","Effort2015","Effort2016"))
+
+## Load GFW Fishing Effort at 0.1 degrees for 2017-2020
+
+fisheries = stack("data/Effort_Fishing_01deg_2017-2020.tif")
+names(fisheries) = paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"))
 
 ## Load GFW 2016 Fishing Effort by Gear for 2016
 
@@ -152,7 +157,7 @@ ui <- fluidPage(
                         .control-label {text-align:center;margin-bottom:0}
                         .label {text-align:center}
                         .shiny-input-container {text-align:center}"))),
-                   selectInput(inputId = "Fisheries", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2016" = 5, "2015" = 4, "2014" = 3, "2013" = 2, "2012" = 1), selected = "2016"),
+                   selectInput(inputId = "Fisheries", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2020" = 4, "2019" = 3, "2018" = 2, "2017" = 1), selected = "2020"),
                    checkboxInput("PlotFisheries", "Add Fishing Effort", FALSE),
                    hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:10px;"),
                    checkboxInput("ChangePlotRange", "Add Fishing Effort > 0.1", FALSE),
@@ -180,7 +185,7 @@ ui <- fluidPage(
                       br(),
                       
                       br(),
-                      actionButton("StaticMap", strong(HTML("View Static <br/>Map Image")),style="                      color: black; 
+                      actionButton("StaticMap", strong(HTML("View &<br/> Download <br/> Static Map")),style="                      color: black; 
                         background-color:white;
                         border-color: #a2b03a;
                         box-shadow: 5px 5px #a2b03a;
@@ -412,8 +417,7 @@ server <- shinyServer(function(input,output,session) {
     updateCheckboxInput(session = session, inputId = "ChangePlotRange", value = is.null(input$ChangePlotRange))
     updateCheckboxInput(session=session, inputId="PlotGear", value = is.null(input$PlotGear))
   })
-
-
+  
 })
 
 ########
