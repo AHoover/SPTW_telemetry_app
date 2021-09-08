@@ -11,7 +11,7 @@ options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot)
 
 ########
 
@@ -180,8 +180,13 @@ ui <- fluidPage(
                    br(),
                    br(),
                    sliderInput("opacity", HTML("Residence Time Opacity <br/>(No Map &#8596 Visible Map)"), min = 0, max = 1, value = 0.7, step = 0.1),
+                   actionButton("go", label = strong(HTML("Download <br/>User Map")), style="                      color: black; background-color:white;
+                        border-color: #a2b03a;
+                        box-shadow: 5px 5px #a2b03a;
+                        border: 2px solid #a2b03a;
+                        "),
                    hr(style="border-color:#cd6ebe;opacity:0.2"),
-                   p("GFW data are based on vessel AIS, thus representing a minimum estimate of fishing occurring in these areas (e.g. dependent on satellite coverage and AIS usage). More information can be found below.", style = "font-size:65%;font-color:#3c4b57;padding:5px")
+                   p("GFW data are based on vessel AIS, thus representing a minimum estimate of fishing occurring in these areas (e.g. dependent on satellite coverage and AIS usage). More information can be found to the right.", style = "font-size:65%;font-color:#3c4b57;padding:5px")
                    ), 
                   mainPanel(width = 10,
                     fluidRow(
@@ -420,6 +425,10 @@ server <- shinyServer(function(input,output,session) {
     updateCheckboxInput(session = session, inputId = "PlotFisheries", value = is.null(input$PlotFisheries))
     updateCheckboxInput(session = session, inputId = "ChangePlotRange", value = is.null(input$ChangePlotRange))
     updateCheckboxInput(session=session, inputId="PlotGear", value = is.null(input$PlotGear))
+  })
+  
+  observeEvent(input$go, {
+    screenshot(id="prediction",filename=paste0("South_Pacific_TurtleWatch_", predictmonth, year))
   })
   
 })
