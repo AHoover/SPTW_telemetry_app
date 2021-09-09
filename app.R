@@ -21,11 +21,34 @@ library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stri
 
 ## Define year and month of interest for prediction
 
-source('data/define_year_month.R')
-predictyear <<- '2021'
-predictmonth <<- 'July'
+# predictyear <<- '2021'
+# predictmonth <<- 'July'
 
-define_year_month(predictyear, str_pad(match(predictmonth,month.name), 2, pad='0'))
+# Extract month (most-recent month with data available) and year of interest
+currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
+message(paste("Current month is",currentmonth))
+
+if(currentmonth > 1){
+  previousmonth <- currentmonth - 1
+} else{
+  previousmonth <- 12
+}
+
+predictmonth <<- month.name[previousmonth]
+
+month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
+
+# Extract year of interest
+currentyear <- as.numeric(format(Sys.Date(), format="%Y"))
+message(paste("Current year is",currentyear))
+
+if(currentmonth == 1){
+  predictyear <- currentyear - 1
+} else{
+  predictyear <- currentyear
+}
+
+year <<- predictyear
 file_dater <- paste0(year,"_",month)
 
 ## Load Prediction; set color palette
@@ -180,10 +203,7 @@ ui <- fluidPage(
                    br(),
                    br(),
                    sliderInput("opacity", HTML("Residence Time Opacity <br/>(No Map &#8596 Visible Map)"), min = 0, max = 1, value = 0.7, step = 0.1),
-                   actionButton("go", label = strong(HTML("Download <br/>User Map")), style="                      color: black; background-color:white;
-                        border-color: #a2b03a;
-                        box-shadow: 5px 5px #a2b03a;
-                        border: 2px solid #a2b03a;
+                   actionButton("usermap", label = strong(HTML("Download <br/>User Map")), style="color: black; background-color:white;border-color:#a2b03a;box-shadow: 5px 5px #a2b03a;border:2px solid #a2b03a;
                         "),
                    hr(style="border-color:#cd6ebe;opacity:0.2"),
                    p("GFW data are based on vessel AIS, thus representing a minimum estimate of fishing occurring in these areas (e.g. dependent on satellite coverage and AIS usage). More information can be found to the right.", style = "font-size:65%;font-color:#3c4b57;padding:5px")
@@ -427,8 +447,8 @@ server <- shinyServer(function(input,output,session) {
     updateCheckboxInput(session=session, inputId="PlotGear", value = is.null(input$PlotGear))
   })
   
-  observeEvent(input$go, {
-    screenshot(id="prediction",filename=paste0("South_Pacific_TurtleWatch_", predictmonth, year))
+  observeEvent(input$usermap, {
+    screenshot(id = "prediction", filename = paste0("South_Pacific_TurtleWatch_", predictmonth, year))
   })
   
 })
