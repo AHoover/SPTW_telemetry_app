@@ -7,11 +7,35 @@
 # Set R Options
 # Load Libraries
 
+
 options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter)
+
+# Set a loading screen theme
+
+waiting_screen <- tagList(
+  spin_loaders(id = 39, color="#a2b03a"),
+  span(strong(em("Loading South Pacific TurtleWatch...")), style="color:#a2b03a;font-size:120%;padding-left:22px"),
+tags$style(
+  ".waiter-overlay-content{
+    position: absolute;
+    top: 50px; /*50 pixels from the top*/
+    left: 38%; /*48% from the left*/
+  }
+  .loaderz-39 {
+    width: 0.75em;
+    height: 0.75em;}
+  .loaderz-39:before {
+    width: 1.5em;
+    height: 5em;}
+  .loaderz-39:after {height: 1.5em;
+    width: 5em;}
+  "
+)
+) 
 
 ########
 
@@ -139,6 +163,9 @@ ui <- fluidPage(
     }
     "))
   ),
+  useWaiter(), 
+  waiterPreloader(html = waiting_screen, color = "#3c4b57"),
+ 
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
     navbarPage(title = div(img(src = "upwell_green_gray.png", style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
                  
@@ -184,9 +211,14 @@ ui <- fluidPage(
                        ".checkbox {margin:0;text-align:left}
                         .checkbox p {margin:0;text-align:left}
                         .shiny-input-container {margin-bottom:0}
-                        .control-label {text-align:center;margin-bottom:0}
+                        .control-label {text-align:center;margin-bottom:0px}
                         .label {text-align:center}
-                        .shiny-input-container {text-align:center}"))),
+                        .shiny-input-container {text-align:center}
+                        .legend {line-height:15px}
+                        .leaflet-top .leaflet-control {margin-top:3px}
+                        .leaflet-bottom .leaflet-control {margin-bottom:2px}
+                        .leaflet-control-layers label {margin-top: 0px; margin-bottom: 0px}
+                        "))),
                    selectInput(inputId = "Fisheries", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2020" = 4, "2019" = 3, "2018" = 2, "2017" = 1), selected = "2020"),
                    checkboxInput("PlotFisheries", "Add Fishing Effort", FALSE),
                    hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:10px;"),
@@ -210,7 +242,8 @@ ui <- fluidPage(
                    ), 
                   mainPanel(width = 10,
                     fluidRow(
-                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 0.8, hide.ui = FALSE, proxy.height = '625px'), width = 10, absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);margin-right:20px;margin-left:10px", tags$b(tags$em("::Under Construction - Experimental Product::")))))),
+                      add_busy_bar(color = "#a2b03a",centered = TRUE),
+                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 1.2, hide.ui = FALSE, proxy.height = '625px'), width = 10, absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);margin-right:20px;margin-left:10px", tags$b(tags$em("::Under Construction - Experimental Product::")))))),
                       br(),
                       column(width = 2, 
                              a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
@@ -324,7 +357,7 @@ server <- shinyServer(function(input,output,session) {
     
     leaflet() %>% addTiles() %>%
     addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>% # Use FALSE if error in palette occurs
-    addLegend(pal = palpredict,values = values(predictraster), title = "Residence <br>Time (Days)") %>%
+    addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
       addMapPane("EBSAs_small", zIndex = 430) %>% 
@@ -343,9 +376,16 @@ server <- shinyServer(function(input,output,session) {
         overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs"),
         options = layersControlOptions(collapsed = FALSE)) %>% 
       hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas")) %>% 
+      addMeasure(
+        position = "bottomleft",
+        primaryLengthUnit = "meters",
+        primaryAreaUnit = "sqmeters",
+        activeColor = "#ffb93f",
+        completedColor = "#A2B03A"
+      ) %>% 
       htmlwidgets::onRender("
         function() {
-            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;\">Areas of Interest</label>');
+            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;\">Areas of Interest</label>');
         }
     ")
   })
