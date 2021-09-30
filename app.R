@@ -7,7 +7,6 @@
 # Set R Options
 # Load Libraries
 
-
 options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
@@ -174,7 +173,7 @@ ui <- fluidPage(
                         fluidRow(column(width = 2),
                           column(
                             br(),
-                            p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
+                            p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
                             p("South Pacific TurtleWatch uses methods based upon",
                                      a(href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"),style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
                           br(),
