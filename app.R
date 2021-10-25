@@ -45,7 +45,7 @@ tags$style(
 ## Define year and month of interest for prediction
 
 # predictyear <<- '2021'
-# predictmonth <<- 'July'
+# predictmonth <<- 'August'
 
 # Extract month (most-recent month with data available) and year of interest
 currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
@@ -60,6 +60,7 @@ if(currentmonth > 1){
 predictmonth <<- month.name[previousmonth]
 
 month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
+message(paste("Prediction month is",predictmonth, "and month is", month))
 
 # Extract year of interest
 currentyear <- as.numeric(format(Sys.Date(), format="%Y"))
