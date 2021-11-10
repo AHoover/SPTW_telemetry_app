@@ -45,7 +45,7 @@ tags$style(
 ## Define year and month of interest for prediction
 
 # predictyear <<- '2021'
-# predictmonth <<- 'August'
+# predictmonth <<- 'October'
 
 # Extract month (most-recent month with data available) and year of interest
 currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
@@ -106,26 +106,15 @@ CRD <- EBSA_all[which(EBSA_all$NAME == 'Costa Rica Dome'),]
 
 allmpas <- read_rds("data/MPAs_WDPA.rds")
 
-## Load GFW Fishing Effort at 0.1 degrees for 2012-2016
-
-# fisheries = stack("data/Effort_Fishing_01deg_2012-2016.tif")
-# names(fisheries) = paste0(c("Effort2012","Effort2013","Effort2014","Effort2015","Effort2016"))
-
-## Load GFW Fishing Effort by Gear for 2016
-
-# gear2016 = stack("data/Effort_FishingByGear_01deg_2016.tif")
-# names(gear2016) = c("Drifting_longlines", "Fixed_gear", "Other_fishing", "Purse_seines", "Squid_jigger", "Trawlers")
-
 ## Load GFW Fishing Effort at 0.1 degrees for 2017-2020
 
-fisheries = stack("data/Effort_Fishing_01deg_2017-2020.tif")
-names(fisheries) = paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"))
+fisheries <- stack("data/Effort_Fishing_01deg_2017-2020.tif")
+names(fisheries) <- paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"))
 
 ## Load GFW Fishing Effort by Gear for 2020
 
-gear2020 = stack("data/Effort_FishingByGear_01deg_2020.tif")
-names(gear2020) = c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
-
+gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
+names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
 
 ########
@@ -163,8 +152,8 @@ ui <- fluidPage(
     }
     "))
   ),
-  useWaiter(), 
-  waiterPreloader(html = waiting_screen, color = "#3c4b57"),
+ useWaiter(),
+ waiterPreloader(html = waiting_screen, color = "#3c4b57"),
  
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
     navbarPage(title = div(img(src = "upwell_green_gray.png", style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
@@ -210,7 +199,9 @@ ui <- fluidPage(
                      tags$style(HTML(
                        ".checkbox {margin:0;text-align:left}
                         .checkbox p {margin:0;text-align:left}
-                        .shiny-input-container {margin-bottom:0}
+                        .radio label {margin:0;text-align:left}
+                        .radio label {margin:0;text-align:left}
+                        .shiny-input-container {margin-bottom:0px}
                         .control-label {text-align:center;margin-bottom:0px}
                         .label {text-align:center}
                         .shiny-input-container {text-align:center}
@@ -219,10 +210,9 @@ ui <- fluidPage(
                         .leaflet-bottom .leaflet-control {margin-bottom:2px}
                         .leaflet-control-layers label {margin-top: 0px; margin-bottom: 0px}
                         "))),
-                   selectInput(inputId = "Fisheries", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2020" = 4, "2019" = 3, "2018" = 2, "2017" = 1), selected = "2020"),
-                   checkboxInput("PlotFisheries", "Add Fishing Effort", FALSE),
-                   hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:10px;"),
-                   checkboxInput("ChangePlotRange", "Add Fishing Effort > 0.1", FALSE),
+                   selectInput(inputId = "FisheriesYear", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2020" = 4, "2019" = 3, "2018" = 2, "2017" = 1), selected = "2020"),
+                   hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:2.5px;"),
+                   radioButtons("GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0)),
                    selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
                    hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                    selectInput(inputId = "Fishinggear", label = "2020 Fishing Effort by Gear (hr/km^2)", choices = c("Drifting longlines" = 7, "Tuna purse seines" = 6, "Squid jigger" = 2, "Purse seines" = 8, "Other purse seines" = 5, "Pole and line" = 9, "Set longlines" = 4, "Trawlers" = 3, "Trollers" = 11, "Set gillnets" = 10, "Fishing" = 1), selected = "Trollers"),
@@ -392,7 +382,7 @@ server <- shinyServer(function(input,output,session) {
 
   filteredmap <- reactive({
 
-    fisheries[[as.numeric(input$Fisheries)]]
+    fisheries[[as.numeric(input$FisheriesYear)]]
 
   })
   
@@ -428,14 +418,14 @@ server <- shinyServer(function(input,output,session) {
       addRasterImage(predictraster, colors = palpredict, opacity = input$opacity, maxBytes=40 * 1024 * 1024, group = "predictionmap")
   })
   
-  observeEvent(input$PlotFisheries, {
-
+  observeEvent(input$GFWPlots, {
+    
     colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
 
     #Always clear the group first on the observed event
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
 
-    if(input$PlotFisheries){
+    if(input$GFWPlots == 1){
       observe({
         pal <- colorpal()
         proxy %>%
@@ -444,16 +434,16 @@ server <- shinyServer(function(input,output,session) {
           addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
-
-  observeEvent(input$ChangePlotRange, {
-
-    colorpal <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
-
-    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
+  
+  observeEvent(input$GFWPlots, {
     
-    if(input$ChangePlotRange){
+    colorpal2 <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
+    
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") 
+    
+    if(input$GFWPlots == 2){
       observe({
-        pal <- colorpal()
+        pal <- colorpal2()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
           addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
@@ -470,6 +460,7 @@ server <- shinyServer(function(input,output,session) {
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
     
     if(input$PlotGear){
+      updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
       observe({
         pal <- colorpal()
         proxy %>%
@@ -482,9 +473,8 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$hideFisheries, {
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
 
-    updateCheckboxInput(session = session, inputId = "PlotFisheries", value = is.null(input$PlotFisheries))
-    updateCheckboxInput(session = session, inputId = "ChangePlotRange", value = is.null(input$ChangePlotRange))
-    updateCheckboxInput(session=session, inputId="PlotGear", value = is.null(input$PlotGear))
+    updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
+    updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
   })
   
   observeEvent(input$usermap, {
