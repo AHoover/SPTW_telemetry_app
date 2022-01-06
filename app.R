@@ -157,9 +157,9 @@ ui <- fluidPage(
  
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
     navbarPage(title = div(img(src = "upwell_green_gray.png", style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
+               id = "maptabs",
                
                tabPanel("Prediction Map",
-                        
                         fluidRow(column(width = 2),
                                  column(
                                    br(),
@@ -198,27 +198,28 @@ ui <- fluidPage(
                         background-color:white;
                         border-color: #a2b03a;
                         box-shadow: 5px 5px #a2b03a;
-                        border: 2px solid #a2b03a;
-                        "),
+                        border: 2px solid #a2b03a"),
+                                             br(),
+                                             br(),
+                                             actionButton(inputId = "moveToInteractive", label = HTML("Want a deeper dive? <br/> Try our interactive <br/> map")),
+                                             
+                            tags$style("#moveToInteractive {
+                            color: #46b1e6; 
+                            background-color:transparent;
+                            border-color: lavender;
+                            font-size:102%;
+                            padding:0px}
+                            #moveToInteractive:hover {
+                            color: #ffb93f;
+                            background-color: inherit;
+                            font-weight: bold;
+                            font-size:105%}"),
                                              tags$head(tags$style(".modal-dialog{ width:825px}")),
                                       ),
                                       column(width = 10,
                                         div(img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"), height = '750px', width = '1050px',style ="display:block")),
                                         p("Leatherback Residence Time (Days) along the Eastern Pacific", style = "color:#A2B03A;padding:2px;padding-left:20px;margin-top:10px;font-size:105%"),
                                         ),
-                                      # br(),
-                        #               column(width = 2, 
-                        #                      a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
-                        #                      br(),
-                        #                      br(),
-                        #                      actionButton("StaticMap", strong(HTML("View &<br/> Download <br/> Static Map")), style="                      color: black; 
-                        # background-color:white;
-                        # border-color: #a2b03a;
-                        # box-shadow: 5px 5px #a2b03a;
-                        # border: 2px solid #a2b03a;
-                        # "),
-                        # tags$head(tags$style(".modal-dialog{ width:825px}")),
-                        #               ),
                                     ),
                                     br(),
                                     br(),
@@ -228,7 +229,7 @@ ui <- fluidPage(
                         br(),
                )),
                  
-               tabPanel("Interative Map",
+               tabPanel("Interactive Map",
 
                         fluidRow(column(width = 2),
                                  column(
@@ -538,6 +539,10 @@ server <- shinyServer(function(input,output,session) {
   
   observeEvent(input$usermap, {
     screenshot(id = "prediction", filename = paste0("South_Pacific_TurtleWatch_", predictmonth, year))
+  })
+  
+  observeEvent(input$moveToInteractive, {
+    updateTabsetPanel(session = session, inputId = "maptabs", selected = "Interactive Map")
   })
   
 })
