@@ -157,20 +157,20 @@ ui <- fluidPage(
  
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
     navbarPage(title = div(img(src = "upwell_green_gray.png", style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
-                 
+               
                tabPanel("Prediction Map",
                         
                         fluidRow(column(width = 2),
-                          column(
-                            br(),
-                            p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
-                            p("South Pacific TurtleWatch uses methods based upon",
+                                 column(
+                                   br(),
+                                   p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
+                                   p("South Pacific TurtleWatch uses methods based upon",
                                      a(href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"),style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
-                          br(),
-                          br(),
-                          fluidRow(column(width = 12, 
-                                          tags$head(
-                                            tags$style(HTML("  .panel-heading {
+                                 br(),
+                                 br(),
+                                 fluidRow(column(width = 12, 
+                                                 tags$head(
+                                                   tags$style(HTML("  .panel-heading {
                                          padding: 4px 20px;
                                          border-bottom: 1px solid transparent;
                                          .border-top-radius((@panel-border-radius - 1));
@@ -179,13 +179,80 @@ ui <- fluidPage(
                                            color: inherit;
                                          }
                                        }"))),
-                            bsCollapse(id = 'textpanels', multiple = FALSE,
-                                    
-                            bsCollapsePanel(title = p('>  What is South Pacific TurtleWatch?', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current model shown below is based on data from satellite-tagged leatherbacks. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, will eventually be added. More information can be found in ', a(em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
-                                                                 bsCollapsePanel(title = p('>  Leatherback Tagging', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).')),
-                                                                 bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')))))),
-                            br(),
-                            hr(),
+                                                 bsCollapse(id = 'textpanels', multiple = FALSE,
+                                                            
+                                                            bsCollapsePanel(title = p('>  What is South Pacific TurtleWatch?', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current model shown below is based on data from satellite-tagged leatherbacks. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, will eventually be added. More information can be found in ', a(em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
+                                                            bsCollapsePanel(title = p('>  Leatherback Tagging', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).'))))),
+                        br(),
+                        hr(),
+                        fluidRow(column(width = 2),
+                                 column(width = 8,
+                                        h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold")))),
+                                    fluidRow(
+                                      br(),
+                                      column(width = 2, 
+                                             a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
+                                             br(),
+                                             br(),
+                                             actionButton("StaticMap", strong(HTML("Download <br/> Static Map")), style="                      color: black; 
+                        background-color:white;
+                        border-color: #a2b03a;
+                        box-shadow: 5px 5px #a2b03a;
+                        border: 2px solid #a2b03a;
+                        "),
+                                             tags$head(tags$style(".modal-dialog{ width:825px}")),
+                                      ),
+                                      column(width = 10,
+                                        div(img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"), height = '750px', width = '1050px',style ="display:block")),
+                                        p("Leatherback Residence Time (Days) along the Eastern Pacific", style = "color:#A2B03A;padding:2px;padding-left:20px;margin-top:10px;font-size:105%"),
+                                        ),
+                                      # br(),
+                        #               column(width = 2, 
+                        #                      a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
+                        #                      br(),
+                        #                      br(),
+                        #                      actionButton("StaticMap", strong(HTML("View &<br/> Download <br/> Static Map")), style="                      color: black; 
+                        # background-color:white;
+                        # border-color: #a2b03a;
+                        # box-shadow: 5px 5px #a2b03a;
+                        # border: 2px solid #a2b03a;
+                        # "),
+                        # tags$head(tags$style(".modal-dialog{ width:825px}")),
+                        #               ),
+                                    ),
+                                    br(),
+                                    br(),
+                                    fluidRow(column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", target = "_blank", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", target = "_blank", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", target = "_blank", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", target = "_blank", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", target = "_blank", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", target = "_blank", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", target = "_blank", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
+                                                    width = 12)),
+                        br(),
+                        br(),
+               )),
+                 
+               tabPanel("Interative Map",
+
+                        fluidRow(column(width = 2),
+                                 column(
+                                   br(),
+                                   p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
+                                   p("South Pacific TurtleWatch uses methods based upon",
+                                     a(href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"),style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
+                                 br(),
+                                 br(),
+                                 fluidRow(column(width = 12, 
+                                                 tags$head(
+                                                   tags$style(HTML("  .panel-heading {
+                                         padding: 4px 20px;
+                                         border-bottom: 1px solid transparent;
+                                         .border-top-radius((@panel-border-radius - 1));
+                                         
+                                         > .dropdown .dropdown-toggle {
+                                           color: inherit;
+                                         }
+                                       }"))),
+                                                 bsCollapse(id = 'textpanels', multiple = FALSE,                
+                                                            bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.'))))),
+                          br(),
+                          hr(),
                         fluidRow(column(width = 2),
                           column(width = 8,
                             h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold")))),
@@ -238,14 +305,6 @@ ui <- fluidPage(
                       column(width = 2, 
                              a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
                       br(),
-                      
-                      br(),
-                      actionButton("StaticMap", strong(HTML("View &<br/> Download <br/> Static Map")),style="                      color: black; 
-                        background-color:white;
-                        border-color: #a2b03a;
-                        box-shadow: 5px 5px #a2b03a;
-                        border: 2px solid #a2b03a;
-                        "),
                       tags$head(tags$style(".modal-dialog{ width:825px}")),
                       ),
                     ),
@@ -260,7 +319,7 @@ ui <- fluidPage(
                 ),
                br(),
                br(),
-               ),
+               )),
       
       tabPanel('Environmental Variables',
 
