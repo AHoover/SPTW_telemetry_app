@@ -11,7 +11,7 @@ options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter);library(slickR)
 
 # Set a loading screen theme
 
@@ -116,6 +116,23 @@ names(fisheries) <- paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"
 gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
 names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
+## Load Hidden Markov Model Overlap Analysis
+### Drifting longlines (temporary placeholder Winter 2022)
+
+load(paste0("data/poly_g1_s123_",as.numeric(month),".rda")) 
+over_longline  <- s1_2_3_12; rm(s1_2_3_12) 
+
+paloverlap <- colorNumeric("YlOrRd", c(0.000001,max(over_longline[[1]]$s1,over_longline[[2]]$s2,over_longline[[3]]$s3)), na.color = "transparent")
+
+overlap_labels_s1 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[1]]$s1, digits = 4)))
+
+overlap_labels_s2 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[2]]$s2, digits = 4)))
+
+overlap_labels_s3 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[3]]$s3, digits = 4)))
+
+## Load Archived Images
+
+# imgs <- list.files("./archive", pattern=".jpg", full.names = TRUE)
 
 ########
 
@@ -150,6 +167,13 @@ ui <- fluidPage(
     background-color: transparent;
     font-weight: bold;
     }
+    /*.slick-track { variableWidth: true;*/
+    /*max-width: 100%; */
+    /*display:block}*/
+    /*.slick-slide img{min-width: 100%;*/
+    /*height: auto;*/
+    /*}*/
+    
     "))
   ),
  useWaiter(),
@@ -223,10 +247,17 @@ ui <- fluidPage(
                                     ),
                                     br(),
                                     br(),
-                                    fluidRow(column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", target = "_blank", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", target = "_blank", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", target = "_blank", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", target = "_blank", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", target = "_blank", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", target = "_blank", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", target = "_blank", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
-                                                    width = 12)),
+                                    fluidRow(column(width = 2),
+                                             column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", target = "_blank", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", target = "_blank", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", target = "_blank", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", target = "_blank", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", target = "_blank", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", target = "_blank", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", target = "_blank", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
+                                                    width = 10)),
                         br(),
                         br(),
+                        # fluidRow(column(width = 2),
+                        #          column(width = 10,
+                        #          textOutput("slickrImgName"),
+                        #          slickROutput("slickr", width = '500px'))),
+                        # br(),
+                        # br(),
                )),
                  
                tabPanel("Interactive Map",
@@ -413,29 +444,34 @@ server <- shinyServer(function(input,output,session) {
       addMapPane("EBSAs_small", zIndex = 430) %>% 
       addMapPane("EEZ", zIndex = 410) %>% 
       addMapPane("MPAs", zIndex = 430) %>%
+      addMapPane("Overlap Index", zIndex = 400) %>% 
       addPolygons(data = ebsas, weight=1.5, label = ~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
       addPolygons(data = ebsas_small, weight = 1.5,label=~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
       addPolygons(data = CRD, weight = 1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
       addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
       addPolygons(data = allmpas, weight = 1.5, opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
       addPolygons(data = countriessubset, weight = 1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country"), group = "Countries") %>% 
+      addPolygons(data = over_longline[[1]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s1), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), label = lapply(overlap_labels_s1,HTML)) %>% # popup = overlap_pop
+      addPolygons(data = over_longline[[2]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s2), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), label = lapply(overlap_labels_s2,HTML)) %>% 
+      addPolygons(data = over_longline[[3]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s3), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'), label = lapply(overlap_labels_s3,HTML)) %>%
       setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
       addLayersControl(
         #baseGroups = c("OSM (default)", "Toner", "Toner Lite"),
-        overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries"),
+        overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
-      hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas")) %>% 
+      hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'))) %>% 
       addMeasure(
         position = "bottomleft",
         primaryLengthUnit = "meters",
         primaryAreaUnit = "sqmeters",
-        activeColor = "#ffb93f",
+        activeColor = "rgb(253, 107, 49)",
         completedColor = "#A2B03A"
-      ) %>% 
+      ) %>%
+      addLegend(pal = paloverlap, values = over_longline[[1]]$s1, title = HTML('<label style=\"color:rgb(253, 107, 49);\">Overlap <br>Index<br></label>'), position = 'bottomleft')  %>% 
       htmlwidgets::onRender("
         function() {
-            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;\">Areas of Interest</label>');
+            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;\">Areas of Interest<br/>&<br/><span style = \"color:rgb(253, 107, 49)\">Overlap Indices</span></label>');
         }
     ")
   })
@@ -543,6 +579,15 @@ server <- shinyServer(function(input,output,session) {
   
   observeEvent(input$moveToInteractive, {
     updateTabsetPanel(session = session, inputId = "maptabs", selected = "Interactive Map")
+  })
+  
+  output[["slickr"]] <- renderSlickR({
+    slickR(imgs)
+  })
+  
+  
+  output[["slickrImgName"]] <- renderText({
+    paste0("CURRENT IMAGE: ", basename(imgs[input$slickr_output_current$.center]))
   })
   
 })
