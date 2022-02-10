@@ -11,7 +11,7 @@ options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter);library(slickR)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter);library(slickR);library(sf)
 
 # Set a loading screen theme
 
@@ -119,8 +119,8 @@ names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Ot
 ## Load Hidden Markov Model Overlap Analysis
 ### Drifting longlines (temporary placeholder Winter 2022)
 
-load(paste0("data/poly_g1_s123_",as.numeric(month),".rda")) 
-over_longline  <- s1_2_3_12; rm(s1_2_3_12) 
+load(paste0("data/poly_g1_s123_",month,".rda")) 
+over_longline  <- k; rm(k) 
 
 paloverlap <- colorNumeric("YlOrRd", c(0.000001,max(over_longline[[1]]$s1,over_longline[[2]]$s2,over_longline[[3]]$s3)), na.color = "transparent")
 
@@ -457,23 +457,24 @@ server <- shinyServer(function(input,output,session) {
       setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
       addLayersControl(
+        position = "bottomleft",
         #baseGroups = c("OSM (default)", "Toner", "Toner Lite"),
         overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
       hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'))) %>% 
+      addLegend(pal = paloverlap, values = pmax(over_longline[[1]]$s1,over_longline[[2]]$s2,over_longline[[3]]$s3), title = HTML('<label style=\"color:rgb(253, 107, 49);\">Overlap <br>Index<br></label>'), position = 'bottomleft')  %>% 
+      htmlwidgets::onRender("
+        function() {
+            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;margin-right:-2px;\">Areas of Interest<br/>& <span style = \"color:rgb(253, 107, 49)\">Overlap Indices</span></label>');
+        }
+    ") %>% 
       addMeasure(
-        position = "bottomleft",
+        position = "bottomright",
         primaryLengthUnit = "meters",
         primaryAreaUnit = "sqmeters",
         activeColor = "rgb(253, 107, 49)",
         completedColor = "#A2B03A"
-      ) %>%
-      addLegend(pal = paloverlap, values = over_longline[[1]]$s1, title = HTML('<label style=\"color:rgb(253, 107, 49);\">Overlap <br>Index<br></label>'), position = 'bottomleft')  %>% 
-      htmlwidgets::onRender("
-        function() {
-            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;\">Areas of Interest<br/>&<br/><span style = \"color:rgb(253, 107, 49)\">Overlap Indices</span></label>');
-        }
-    ")
+      )
   })
 
   filteredmap <- reactive({
