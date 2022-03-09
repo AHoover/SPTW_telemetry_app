@@ -9,6 +9,7 @@
 
 options("rgdal_show_exportToProj4_warnings" = "none")
 options(curl_interrupt = FALSE)
+options(repos = c(CRAN = "https://cran.rstudio.com/")) # Set for running batch deployment
 httr::config(connecttimeout = 60)
 
 library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter);library(slickR);library(sf)
@@ -116,19 +117,18 @@ names(fisheries) <- paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"
 gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
 names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
-## Load Hidden Markov Model Overlap Analysis
-### Drifting longlines (temporary placeholder Winter 2022)
+## Load Hidden Markov Model Relative Risk of Interaction Analysis
+### Drifting longlines ("g1") (temporary placeholder Winter 2022)
 
-load(paste0("data/poly_g1_s123_",month,".rda")) 
-over_longline  <- k; rm(k) 
+load(paste0("data/risk_g1_s123_",month,".rda")) # load(paste0("data/poly_g1_s123_",month,".rda")) # over_longline  <- k; rm(k) 
 
-paloverlap <- colorNumeric("YlOrRd", c(0.000001,max(over_longline[[1]]$s1,over_longline[[2]]$s2,over_longline[[3]]$s3)), na.color = "transparent")
+palrisk <- colorNumeric(c("gray75","green","yellow"), c(0.0001, max(values(risk[[1]]),values(risk[[2]]),values(risk[[3]]))), na.color = "transparent")
 
-overlap_labels_s1 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[1]]$s1, digits = 4)))
+# risk_labels_s1 <- as.list(paste("<strong>Relative Risk <br>of Interaction <br> for State 1: </strong>",round(risk[[1]], digits = 4))) # overlap_labels_s1 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[1]]$s1, digits = 4)))
 
-overlap_labels_s2 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[2]]$s2, digits = 4)))
+# risk_labels_s2 <- as.list(paste("<strong>Relative Risk <br>of Interaction <br> for State 2: </strong>",round(risk[[2]], digits = 4)))
 
-overlap_labels_s3 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[3]]$s3, digits = 4)))
+# risk_labels_s3 <- as.list(paste("<strong>Relative Risk <br>of Interaction <br> for State 3: </strong>",round(risk[[3]], digits = 4)))
 
 ## Load Archived Images
 
@@ -282,7 +282,8 @@ ui <- fluidPage(
                                          }
                                        }"))),
                                                  bsCollapse(id = 'textpanels', multiple = FALSE,                
-                                                            bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.'))))),
+                                                            bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
+                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for drifting (pelagic) longline fishing. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),').'))))))),
                           br(),
                           hr(),
                         fluidRow(column(width = 2),
@@ -444,16 +445,17 @@ server <- shinyServer(function(input,output,session) {
       addMapPane("EBSAs_small", zIndex = 430) %>% 
       addMapPane("EEZ", zIndex = 410) %>% 
       addMapPane("MPAs", zIndex = 430) %>%
-      addMapPane("Overlap Index", zIndex = 400) %>% 
+      addMapPane("Relative Risk of Interaction", zIndex = 400) %>% # "Overlap Index"
       addPolygons(data = ebsas, weight=1.5, label = ~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
       addPolygons(data = ebsas_small, weight = 1.5,label=~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
       addPolygons(data = CRD, weight = 1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
       addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
       addPolygons(data = allmpas, weight = 1.5, opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
       addPolygons(data = countriessubset, weight = 1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country"), group = "Countries") %>% 
-      addPolygons(data = over_longline[[1]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s1), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), label = lapply(overlap_labels_s1,HTML)) %>% # popup = overlap_pop
-      addPolygons(data = over_longline[[2]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s2), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), label = lapply(overlap_labels_s2,HTML)) %>% 
-      addPolygons(data = over_longline[[3]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s3), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'), label = lapply(overlap_labels_s3,HTML)) %>%
+      addRasterImage(risk[[1]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>')) %>% # popup = overlap_pop, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), label = lapply(risk_labels_s1,HTML)
+      addRasterImage(risk[[2]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>')) %>%
+      addRasterImage(risk[[3]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')) %>%
+    # addPolygons(data = over_longline[[1]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s1), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), label = lapply(overlap_labels_s1,HTML)) %>% # popup = overlap_pop
       setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
       addLayersControl(
@@ -461,11 +463,11 @@ server <- shinyServer(function(input,output,session) {
         #baseGroups = c("OSM (default)", "Toner", "Toner Lite"),
         overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
-      hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'))) %>% 
-      addLegend(pal = paloverlap, values = pmax(over_longline[[1]]$s1,over_longline[[2]]$s2,over_longline[[3]]$s3), title = HTML('<label style=\"color:rgb(253, 107, 49);\">Overlap <br>Index<br></label>'), position = 'bottomleft')  %>% 
+      hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'))) %>%
+      addLegend(pal = palrisk, values = pmax(values(risk[[1]]),values(risk[[2]]),values(risk[[3]])), title = HTML('<label style=\"color:rgb(253, 107, 49);\">Relative Risk <br>of Interaction <br></label>'), position = 'bottomright')  %>% 
       htmlwidgets::onRender("
         function() {
-            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;margin-right:-2px;\">Areas of Interest<br/>& <span style = \"color:rgb(253, 107, 49)\">Overlap Indices</span></label>');
+            $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;margin-right:-2px;\">Areas of Interest<br/>& <span style = \"color:rgb(253, 107, 49)\">Relative Risk <br/> of Interaction</span></label>');
         }
     ") %>% 
       addMeasure(
