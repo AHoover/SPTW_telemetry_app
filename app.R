@@ -78,9 +78,11 @@ file_dater <- paste0(year,"_",month)
 
 ## Load Prediction; set color palette
 
-filename_predict <- paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.tif") # Alternatively, tolower(month.abb[as.numeric(month)]) if lowercase month
+load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+# Alternatively, tolower(month.abb[as.numeric(month)]) if lowercase month
 
-predictraster <- raster(filename_predict)
+# predictraster <- raster(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.tif"))
+
 palpredict <- colorNumeric("magma", values(predictraster), reverse=FALSE, na.color = "transparent")
 
 ## Load country and EEZ map data
@@ -120,9 +122,9 @@ names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Ot
 ## Load Hidden Markov Model Relative Risk of Interaction Analysis
 ### Drifting longlines ("g1") (temporary placeholder Winter 2022)
 
-load(paste0("data/risk_g1_s123_",month,".rda")) # load(paste0("data/poly_g1_s123_",month,".rda")) # over_longline  <- k; rm(k) 
+# load(paste0("data/risk_g1_s123_",month,".rda")) # load(paste0("data/poly_g1_s123_",month,".rda")) # over_longline  <- k; rm(k) 
 
-palrisk <- colorNumeric(c("gray75","green","yellow"), c(0.0001, max(values(risk[[1]]),values(risk[[2]]),values(risk[[3]]))), na.color = "transparent")
+# palrisk <- colorNumeric(c("gray75","green","yellow"), c(0.0001, max(values(risk[[1]]),values(risk[[2]]),values(risk[[3]]))), na.color = "transparent")
 
 # risk_labels_s1 <- as.list(paste("<strong>Relative Risk <br>of Interaction <br> for State 1: </strong>",round(risk[[1]], digits = 4))) # overlap_labels_s1 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[1]]$s1, digits = 4)))
 
@@ -452,9 +454,9 @@ server <- shinyServer(function(input,output,session) {
       addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
       addPolygons(data = allmpas, weight = 1.5, opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
       addPolygons(data = countriessubset, weight = 1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country"), group = "Countries") %>% 
-      addRasterImage(risk[[1]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>')) %>% # popup = overlap_pop, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), label = lapply(risk_labels_s1,HTML)
-      addRasterImage(risk[[2]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>')) %>%
-      addRasterImage(risk[[3]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')) %>%
+      # addRasterImage(risk[[1]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>')) %>% # popup = overlap_pop, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), label = lapply(risk_labels_s1,HTML)
+      # addRasterImage(risk[[2]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>')) %>%
+      # addRasterImage(risk[[3]], opacity = 0.8, project = TRUE, colors = palrisk, group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')) %>%
     # addPolygons(data = over_longline[[1]], weight = 1.5, fillOpacity = 0.7, fillColor = ~paloverlap(s1), color = '#3c4b57', opacity = 0.1, highlightOptions = highlightOptions(color = "#3c4b57", weight = 4.5, bringToFront = TRUE, opacity = 1), options = pathOptions(pane = "Overlap Index"), group = HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), label = lapply(overlap_labels_s1,HTML)) %>% # popup = overlap_pop
       setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
@@ -464,7 +466,7 @@ server <- shinyServer(function(input,output,session) {
         overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
       hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'))) %>%
-      addLegend(pal = palrisk, values = pmax(values(risk[[1]]),values(risk[[2]]),values(risk[[3]])), title = HTML('<label style=\"color:rgb(253, 107, 49);\">Relative Risk <br>of Interaction <br></label>'), position = 'bottomright')  %>% 
+      # addLegend(pal = palrisk, values = pmax(values(risk[[1]]),values(risk[[2]]),values(risk[[3]])), title = HTML('<label style=\"color:rgb(253, 107, 49);\">Relative Risk <br>of Interaction <br></label>'), position = 'bottomright')  %>% 
       htmlwidgets::onRender("
         function() {
             $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;margin-right:-2px;\">Areas of Interest<br/>& <span style = \"color:rgb(253, 107, 49)\">Relative Risk <br/> of Interaction</span></label>');
