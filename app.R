@@ -299,7 +299,7 @@ ui <- fluidPage(
                         .shiny-input-container {margin-bottom:0px}
                         .control-label {text-align:center;margin-bottom:0px}
                         .label {text-align:center}
-                        .shiny-input-container {text-align:center}
+                        .shiny-input-container {text-align:-webkit-left}
                         .legend {line-height:15px}
                         .leaflet-top .leaflet-control {margin-top:3px}
                         .leaflet-bottom .leaflet-control {margin-bottom:2px}
@@ -341,6 +341,9 @@ ui <- fluidPage(
                       selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines"),
                       hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                       radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
+                      br(),
+                      actionButton(inputId = "hideFisheriesRisk",
+                                   label = HTML("Clear <br/>Risk of <br/>Interaction"), style = "font-weight:bold;text-align:center;font-size:105%;color:#FD6B31;padding:15px;border:2px;box-shadow: 0 0 11px 2px #FD6B31;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #FD6B31"),
                       ),
                     ),
                     fluidRow(
@@ -602,7 +605,7 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$PlotRisk, {
     
     #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
+    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") # %>% clearGroup(group = "Fisheries.group") 
     
     observe({
       
@@ -614,6 +617,14 @@ server <- shinyServer(function(input,output,session) {
         addLegend(pal = pal, values = pmax(values(riskstack)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);;margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright")
       })
     
+  })
+  
+  observeEvent(input$hideFisheriesRisk, {
+    leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend")
+    
+    updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines")
+                      
+    updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
   })
   
   output[["slickr"]] <- renderSlickR({
