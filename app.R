@@ -124,6 +124,12 @@ load(paste0("data/risk_g1_s123_",month,".rda")) # load(paste0("data/poly_g1_s123
 
 palrisk <- colorNumeric(c("gray75","green","yellow"), c(0.0001, max(values(risk[[1]]),values(risk[[2]]),values(risk[[3]]))), na.color = "transparent")
 
+### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines
+
+load(paste0("data/risk_g1-6_s123_",month,".rda"))
+
+palriskstack <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(values(riskstack))), na.color = "transparent")
+
 # risk_labels_s1 <- as.list(paste("<strong>Relative Risk <br>of Interaction <br> for State 1: </strong>",round(risk[[1]], digits = 4))) # overlap_labels_s1 <- as.list(paste("<strong>Overlap Index: </strong>",round(over_longline[[1]]$s1, digits = 4)))
 
 # risk_labels_s2 <- as.list(paste("<strong>Relative Risk <br>of Interaction <br> for State 2: </strong>",round(risk[[2]], digits = 4)))
@@ -293,7 +299,7 @@ ui <- fluidPage(
                          
                sidebarLayout(
                  sidebarPanel(
-                   p("Global Fishing Watch (GFW) Fishing Data", style = "text-align:center"), style = "border:white; background-color:lavendar;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", width = 2,
+                   p("Global Fishing Watch (GFW) Fishing Data", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", width = 2,
                    hr(style = "border-color:#cd6ebe;opacity:0.8;margin-top:10px;margin-bottom:20px;"),
                    tags$head(
                      tags$style(HTML(
@@ -338,7 +344,14 @@ ui <- fluidPage(
                       column(width = 2, 
                              a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
                       br(),
+                      br(),
                       tags$head(tags$style(".modal-dialog{ width:825px}")),
+                      hr(style = "border-color:#cd6ebe;opacity:0.9;margin-top:10px;margin-bottom:20px;"),
+                      p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
+                      hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
+                      selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines"),
+                      hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
+                      radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
                       ),
                     ),
                     fluidRow(
@@ -464,7 +477,7 @@ server <- shinyServer(function(input,output,session) {
         overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
       hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'))) %>%
-      addLegend(pal = palrisk, values = pmax(values(risk[[1]]),values(risk[[2]]),values(risk[[3]])), title = HTML('<label style=\"color:rgb(253, 107, 49);\">Relative Risk <br>of Interaction <br></label>'), position = 'bottomright')  %>%
+      # addLegend(pal = palrisk, values = pmax(values(risk[[1]]),values(risk[[2]]),values(risk[[3]])), title = HTML('<label style=\"color:rgb(253, 107, 49);\">Relative Risk <br>of Interaction <br></label>'), position = 'bottomright')  %>%
       htmlwidgets::onRender("
         function() {
             $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;margin-right:-2px;\">Areas of Interest<br/>& <span style = \"color:rgb(253, 107, 49)\">Relative Risk <br/> of Interaction</span></label>');
@@ -490,6 +503,24 @@ server <- shinyServer(function(input,output,session) {
      gear2020[[as.numeric(input$Fishinggear)]]
 
    })
+  
+  filteredriskgear <- reactive({
+    
+    filteredrisk = raster::subset(riskstack, grep(paste0('g', input$Riskfishinggear), names(riskstack), value = T))
+    
+    filteredrisk[[as.numeric(input$PlotRisk)]]
+    
+  })
+  
+  legendfilteredrisk <- reactive({
+    
+  filteredriskname = data.frame(
+    names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines'),
+    id = seq(6))
+ 
+  filteredriskname[[input$Riskfishinggear,1]]
+  
+  })
   
 
   proxy <- leafletProxy("prediction")
@@ -522,7 +553,7 @@ server <- shinyServer(function(input,output,session) {
     colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
 
     #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click
 
     if(input$GFWPlots == 1){
       observe({
@@ -538,7 +569,7 @@ server <- shinyServer(function(input,output,session) {
     
     colorpal2 <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
     
-    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") 
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") 
     
     if(input$GFWPlots == 2){
       observe({
@@ -556,7 +587,7 @@ server <- shinyServer(function(input,output,session) {
     colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 120, ceiling(max(values(filteredgear()),na.rm=T))), na.color = "transparent")})
     
     #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") # Removes legend on click
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click
     
     if(input$PlotGear){
       updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
@@ -565,7 +596,7 @@ server <- shinyServer(function(input,output,session) {
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
           addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
-          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ",sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
 
@@ -582,6 +613,23 @@ server <- shinyServer(function(input,output,session) {
   
   observeEvent(input$moveToInteractive, {
     updateTabsetPanel(session = session, inputId = "maptabs", selected = "Interactive Map")
+  })
+  
+  observeEvent(input$PlotRisk, {
+    
+    #Always clear the group first on the observed event
+    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
+    
+    observe({
+      
+      pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(values(riskstack))), na.color = "transparent")
+      
+      proxy %>%
+        removeControl(legend) %>% # Removes legend on gear change
+        addRasterImage(filteredriskgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
+        addLegend(pal = pal, values = pmax(values(riskstack)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);;margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright")
+      })
+    
   })
   
   output[["slickr"]] <- renderSlickR({
