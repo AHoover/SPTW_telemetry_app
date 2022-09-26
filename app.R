@@ -121,7 +121,7 @@ names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Ot
 
 ### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines
 
-load(paste0("data/risk_g1-6_s123_",month,".rda"))
+load(list.files("data/", pattern="risk_g1-", full.names = TRUE))
 
 palriskstack <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(values(riskstack))), na.color = "transparent")
 
@@ -278,7 +278,7 @@ ui <- fluidPage(
                                        }"))),
                                                  bsCollapse(id = 'textpanels', multiple = FALSE,                
                                                             bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
-                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, and set longlines. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),').'))))))),
+                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, and set longlines. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),').'))))))),
                           br(),
                           hr(),
                         fluidRow(column(width = 2),
@@ -338,7 +338,8 @@ ui <- fluidPage(
                       hr(style = "border-color:#cd6ebe;opacity:0.9;margin-top:10px;margin-bottom:20px;"),
                       p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
                       hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
-                      selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines"),
+                      selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set longlines" = 5), selected = "Drifting longlines"),
+                     # selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines"),
                       hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                       radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
                       br(),
@@ -493,7 +494,11 @@ server <- shinyServer(function(input,output,session) {
   
   filteredriskgear <- reactive({
     
+   if(input$Riskfishinggear < 5) { # Temporary fix until automation corrected Sept. 2022
     filteredrisk = raster::subset(riskstack, grep(paste0('g', input$Riskfishinggear), names(riskstack), value = T))
+   } else {
+     filteredrisk = raster::subset(riskstack, grep(paste0('g6'), names(riskstack), value = T))
+   }
     
     filteredrisk[[as.numeric(input$PlotRisk)]]
     
@@ -501,9 +506,13 @@ server <- shinyServer(function(input,output,session) {
   
   legendfilteredrisk <- reactive({
     
+  # filteredriskname = data.frame(
+  #   names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines'),
+  #   id = seq(6))
+  
   filteredriskname = data.frame(
-    names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines'),
-    id = seq(6))
+    names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set longlines'),
+    id = seq(5))
  
   filteredriskname[[input$Riskfishinggear,1]]
   
@@ -622,7 +631,9 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$hideFisheriesRisk, {
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend")
     
-    updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines")
+    # updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines")
+    
+    updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set longlines" = 5), selected = "Drifting longlines")
                       
     updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
   })
