@@ -58,7 +58,7 @@ if(currentmonth > 1){
   previousmonth <- 12
 }
 
-predictmonth <<- month.name[previousmonth]
+predictmonth <<- month.name[previousmonth] # Fix error
 
 month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
 message(paste("Prediction month is",predictmonth, "and month is", month))
