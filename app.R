@@ -45,9 +45,6 @@ tags$style(
 
 ## Define year and month of interest for prediction
 
-# predictyear <<- '2021'
-# predictmonth <<- 'October'
-
 # Extract month (most-recent month with data available) and year of interest
 currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
 message(paste("Current month is",currentmonth))
