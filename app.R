@@ -45,9 +45,6 @@ tags$style(
 
 ## Define year and month of interest for prediction
 
-# predictyear <<- '2021'
-# predictmonth <<- 'October'
-
 # Extract month (most-recent month with data available) and year of interest
 currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
 message(paste("Current month is",currentmonth))
@@ -65,7 +62,7 @@ message(paste("Prediction month is",predictmonth, "and month is", month))
 
 # Extract year of interest
 currentyear <- as.numeric(format(Sys.Date(), format="%Y"))
-message(paste("Current year is",currentyear))
+message(paste("Current year is", currentyear))
 
 if(currentmonth == 1){
   predictyear <- currentyear - 1
@@ -76,9 +73,35 @@ if(currentmonth == 1){
 year <<- predictyear
 file_dater <- paste0(year,"_",month)
 
-## Load Prediction; set color palette
 
-load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+## Load Prediction; set color palette
+### Confirm data in folder is up-to-date for the most recent month.
+#### This is to fix an error for the days early in the month where the previous month's data is not yet available to update the predictions. 
+
+tryCatch(
+  {
+    
+  load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+    
+  },
+  
+   # If there is an error, search for file in data folder instead. This could be done from the start, if preferable. 
+  
+  error = function(e){
+    
+  year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')
+  month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')
+  file_dater <- paste0(year,"_", month)
+  
+  # Reset prediction year and month for later code 
+  predictyear <<- year
+  predictmonth <<- month.name[as.numeric(month)]
+  message(paste("Prediction month is", predictmonth, "and month is", month))
+  
+  }
+  
+)
+
 # Alternatively, tolower(month.abb[as.numeric(month)]) if lowercase month
 
 palpredict <- colorNumeric("magma", values(predictraster), reverse=FALSE, na.color = "transparent")
