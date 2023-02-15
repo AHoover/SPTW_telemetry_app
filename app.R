@@ -55,7 +55,7 @@ if(currentmonth > 1){
   previousmonth <- 12
 }
 
-predictmonth <<- month.name[previousmonth]
+predictmonth <<- month.name[previousmonth] # Fix error
 
 month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
 message(paste("Prediction month is",predictmonth, "and month is", month))
@@ -145,7 +145,9 @@ names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Ot
 
 ### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines, g7 = squid jiggers, g8 = trawlers, g9 = tuna purse seines
 
+
 load(paste0("data/risk_g1-9_s123_", month , ".rda"))
+
 
 ## Load Archived Images
 
@@ -300,6 +302,7 @@ ui <- fluidPage(
                                        }"))),
                                                  bsCollapse(id = 'textpanels', multiple = FALSE,                
                                                             bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
+
                                                             bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),').'))))))),
                           br(),
                           hr(),
@@ -516,7 +519,11 @@ server <- shinyServer(function(input,output,session) {
   
   filteredriskgear <- reactive({
     
+   if(input$Riskfishinggear < 5) { # Temporary fix until automation corrected Sept. 2022
     filteredrisk = raster::subset(riskstack, grep(paste0('g', input$Riskfishinggear), names(riskstack), value = T))
+   } else {
+     filteredrisk = raster::subset(riskstack, grep(paste0('g6'), names(riskstack), value = T))
+   }
     
     filteredrisk[[as.numeric(input$PlotRisk)]]
     
@@ -524,6 +531,10 @@ server <- shinyServer(function(input,output,session) {
   
   legendfilteredrisk <- reactive({
     
+  # filteredriskname = data.frame(
+  #   names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines'),
+  #   id = seq(6))
+  
   filteredriskname = data.frame(
     names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines', 'Squid jiggers', 'Trawlers', 'Tuna purse seines'),
     id = seq(9))
