@@ -330,7 +330,7 @@ ui <- fluidPage(
                    selectInput(inputId = "FisheriesYear", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2020" = 4, "2019" = 3, "2018" = 2, "2017" = 1), selected = "2020"),
                    hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:2.5px;"),
                    radioButtons("GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0)),
-                   selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
+                   selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "Reds"),
                    hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                    selectInput(inputId = "Fishinggear", label = "2020 Fishing Effort by Gear (hr/km^2)", choices = c("Drifting longlines" = 7, "Tuna purse seines" = 6, "Squid jigger" = 2, "Purse seines" = 8, "Other purse seines" = 5, "Pole and line" = 9, "Set longlines" = 4, "Trawlers" = 3, "Trollers" = 11, "Set gillnets" = 10, "Fishing" = 1), selected = "Trollers"),
                    checkboxInput("PlotGear", "Plot 2020 Fishing Effort by Gear", FALSE),
@@ -361,6 +361,7 @@ ui <- fluidPage(
                       p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
                       hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
                       selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines"),
+                      selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
                       hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                       radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
                       br(),
@@ -633,17 +634,24 @@ server <- shinyServer(function(input,output,session) {
       
       riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
       
-      riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
-      
     # For one colorscale across all behavioral states
       # riskmax = maxValue(riskstack) 
       # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmax[!is.na(riskmax)])), na.color = "transparent")
       # rm(riskmax)
       
-      pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")
+      riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
+      
+      # For a single color palette across behavioral states
+      # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")
+     
+      # For a dynamic color palette
+      colorpalrisk <- reactive({colorNumeric(c('grey75',brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")})
+      
+      pal <- colorpalrisk()
+      # c('f0f0f0',brewer.pal(n=9,"Reds"))
       
       rm(riskmaxbehavior)
-      
+
       proxy %>%
         removeControl(legend) %>% # Removes legend on gear change
         addRasterImage(filteredriskgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
@@ -661,10 +669,11 @@ server <- shinyServer(function(input,output,session) {
     updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
   })
   
+  # track_usage(storage_mode = store_json(path = "logs/"))
+  
   output[["slickr"]] <- renderSlickR({
     slickR(imgs)
   })
-  
   
   output[["slickrImgName"]] <- renderText({
     paste0("CURRENT IMAGE: ", basename(imgs[input$slickr_output_current$.center]))
