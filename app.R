@@ -61,8 +61,9 @@ month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
 message(paste("Prediction month is",predictmonth, "and month is", month))
 
 # Extract year of interest
+
 currentyear <- as.numeric(format(Sys.Date(), format="%Y"))
-message(paste("Current year is",currentyear))
+message(paste("Current year is", currentyear))
 
 if(currentmonth == 1){
   predictyear <- currentyear - 1
@@ -73,9 +74,35 @@ if(currentmonth == 1){
 year <<- predictyear
 file_dater <- paste0(year,"_",month)
 
-## Load Prediction; set color palette
 
-load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+## Load Prediction; set color palette
+### Confirm data in folder is up-to-date for the most recent month.
+#### This is to fix an error for the days early in the month where the previous month's data is not yet available to update the predictions. 
+
+tryCatch(
+  {
+    
+  load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+    
+  },
+  
+   # If there is an error, search for file in data folder instead. This could be done from the start, if preferable. 
+  
+  error = function(e){
+    
+  year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')
+  month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')
+  file_dater <- paste0(year,"_", month)
+  
+  # Reset prediction year and month for later code 
+  predictyear <<- year
+  predictmonth <<- month.name[as.numeric(month)]
+  message(paste("Prediction month is", predictmonth, "and month is", month))
+  
+  }
+  
+)
+
 # Alternatively, tolower(month.abb[as.numeric(month)]) if lowercase month
 
 palpredict <- colorNumeric("magma", values(predictraster), reverse=FALSE, na.color = "transparent")
@@ -116,11 +143,11 @@ names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Ot
 
 ## Load Hidden Markov Model Relative Risk of Interaction Analysis
 
-### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines
+### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines, g7 = squid jiggers, g8 = trawlers, g9 = tuna purse seines
 
-load(list.files("data/", pattern="risk_g1-", full.names = TRUE))
 
-palriskstack <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(values(riskstack))), na.color = "transparent")
+load(paste0("data/risk_g1-9_s123_", month , ".rda"))
+
 
 ## Load Archived Images
 
@@ -275,7 +302,8 @@ ui <- fluidPage(
                                        }"))),
                                                  bsCollapse(id = 'textpanels', multiple = FALSE,                
                                                             bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
-                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, and set longlines. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),').'))))))),
+
+                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),').'))))))),
                           br(),
                           hr(),
                         fluidRow(column(width = 2),
@@ -305,7 +333,7 @@ ui <- fluidPage(
                    selectInput(inputId = "FisheriesYear", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2020" = 4, "2019" = 3, "2018" = 2, "2017" = 1), selected = "2020"),
                    hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:2.5px;"),
                    radioButtons("GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0)),
-                   selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
+                   selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "Reds"),
                    hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                    selectInput(inputId = "Fishinggear", label = "2020 Fishing Effort by Gear (hr/km^2)", choices = c("Drifting longlines" = 7, "Tuna purse seines" = 6, "Squid jigger" = 2, "Purse seines" = 8, "Other purse seines" = 5, "Pole and line" = 9, "Set longlines" = 4, "Trawlers" = 3, "Trollers" = 11, "Set gillnets" = 10, "Fishing" = 1), selected = "Trollers"),
                    checkboxInput("PlotGear", "Plot 2020 Fishing Effort by Gear", FALSE),
@@ -335,8 +363,8 @@ ui <- fluidPage(
                       hr(style = "border-color:#cd6ebe;opacity:0.9;margin-top:10px;margin-bottom:20px;"),
                       p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
                       hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
-                      selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set longlines" = 5), selected = "Drifting longlines"),
-                     # selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines"),
+                      selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines"),
+                      selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
                       hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                       radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
                       br(),
@@ -508,8 +536,8 @@ server <- shinyServer(function(input,output,session) {
   #   id = seq(6))
   
   filteredriskname = data.frame(
-    names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set longlines'),
-    id = seq(5))
+    names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines', 'Squid jiggers', 'Trawlers', 'Tuna purse seines'),
+    id = seq(9))
  
   filteredriskname[[input$Riskfishinggear,1]]
   
@@ -615,12 +643,31 @@ server <- shinyServer(function(input,output,session) {
     
     observe({
       
-      pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(values(riskstack))), na.color = "transparent")
+      riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
       
+    # For one colorscale across all behavioral states
+      # riskmax = maxValue(riskstack) 
+      # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmax[!is.na(riskmax)])), na.color = "transparent")
+      # rm(riskmax)
+      
+      riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
+      
+      # For a single color palette across behavioral states
+      # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")
+     
+      # For a dynamic color palette
+      colorpalrisk <- reactive({colorNumeric(c('grey75',brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")})
+      
+      pal <- colorpalrisk()
+      # c('f0f0f0',brewer.pal(n=9,"Reds"))
+      
+      rm(riskmaxbehavior)
+
       proxy %>%
         removeControl(legend) %>% # Removes legend on gear change
         addRasterImage(filteredriskgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
-        addLegend(pal = pal, values = pmax(values(riskstack)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);;margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright")
+        addLegend(pal = pal, values = pmax(values(riskbehavior)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright")
+        # addLegend(pal = pal, values = pmax(values(riskstack)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);;margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # Run this when running the same legend across states, ie riskmax = maxValue(riskstack)
       })
     
   })
@@ -628,17 +675,16 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$hideFisheriesRisk, {
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend")
     
-    # updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6), selected = "Drifting longlines")
-    
-    updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set longlines" = 5), selected = "Drifting longlines")
+    updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines") 
                       
     updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
   })
   
+  # track_usage(storage_mode = store_json(path = "logs/"))
+  
   output[["slickr"]] <- renderSlickR({
     slickR(imgs)
   })
-  
   
   output[["slickrImgName"]] <- renderText({
     paste0("CURRENT IMAGE: ", basename(imgs[input$slickr_output_current$.center]))
