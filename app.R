@@ -74,7 +74,6 @@ if(currentmonth == 1){
 year <<- predictyear
 file_dater <- paste0(year,"_",month)
 
-
 ## Load Prediction; set color palette
 ### Confirm data in folder is up-to-date for the most recent month.
 #### This is to fix an error for the days early in the month where the previous month's data is not yet available to update the predictions. 
@@ -144,15 +143,8 @@ names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Ot
 ## Load Hidden Markov Model Relative Risk of Interaction Analysis
 
 ### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines, g7 = squid jiggers, g8 = trawlers, g9 = tuna purse seines
-<<<<<<< HEAD
 
 load(paste0("data/risk_g1-9_s123_", month , ".rda"))
-=======
-
-
-load(paste0("data/risk_g1-9_s123_", month , ".rda"))
-
->>>>>>> def17bc3f65fb78d30f2f6997d7692fc01e518c2
 
 ## Load Archived Images
 
