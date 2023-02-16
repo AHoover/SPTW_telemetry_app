@@ -516,11 +516,7 @@ server <- shinyServer(function(input,output,session) {
   
   filteredriskgear <- reactive({
     
-   if(input$Riskfishinggear < 5) { # Temporary fix until automation corrected Sept. 2022
     filteredrisk = raster::subset(riskstack, grep(paste0('g', input$Riskfishinggear), names(riskstack), value = T))
-   } else {
-     filteredrisk = raster::subset(riskstack, grep(paste0('g6'), names(riskstack), value = T))
-   }
     
     filteredrisk[[as.numeric(input$PlotRisk)]]
     
