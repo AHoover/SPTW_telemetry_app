@@ -467,7 +467,7 @@ server <- shinyServer(function(input,output,session) {
     
     leaflet() %>% addTiles() %>%
     addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>% # Use FALSE if error in palette occurs
-    addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)") %>%
+    addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
       addMapPane("EBSAs_small", zIndex = 430) %>% 
@@ -632,7 +632,7 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$PlotRisk, {
     
     #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") # %>% clearGroup(group = "Fisheries.group") 
+    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") # %>% clearGroup(group = "Fisheries.group") 
     
     observe({
       
@@ -649,17 +649,20 @@ server <- shinyServer(function(input,output,session) {
       # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")
      
       # For a dynamic color palette
-      colorpalrisk <- reactive({colorNumeric(c('grey75',brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")})
+      colorpalrisk <- reactive({colorNumeric(c('#abd2e1', brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")})
       
+      colorpalrisk <- reactive({colorNumeric(c('#abd2e1', brewer.pal(n = 5,input$colorsRisk)), c(0, max(values(filteredriskgear()))), na.color = "transparent")})
+        
       pal <- colorpalrisk()
       # c('f0f0f0',brewer.pal(n=9,"Reds"))
       
       rm(riskmaxbehavior)
-
+                       
       proxy %>%
         removeControl(legend) %>% # Removes legend on gear change
-        addRasterImage(filteredriskgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
-        addLegend(pal = pal, values = pmax(values(riskbehavior)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright")
+        addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
+        addLegend(pal = pal, values = values(filteredriskgear()), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright")
+        # addLegend(pal = pal, values = pmax(values(riskbehavior)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # For the dynamic color palette varying with behavior  
         # addLegend(pal = pal, values = pmax(values(riskstack)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);;margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # Run this when running the same legend across states, ie riskmax = maxValue(riskstack)
       })
     
