@@ -140,11 +140,17 @@ names(fisheries) <- paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"
 gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
 names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
-## Load Hidden Markov Model Relative Risk of Interaction Analysis
+## Load Hidden Markov Model Relative Risk of Interaction Analysis and Area
 
 ### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines, g7 = squid jiggers, g8 = trawlers, g9 = tuna purse seines
 
 load(paste0("data/risk_g1-9_s123_", month , ".rda"))
+
+maprisk = read.rds("data/fisheries_risk_area.rds")
+
+## Load personalized color palette
+
+source("data/sptw_brewer_pal.R")
 
 ## Load Archived Images
 
@@ -361,7 +367,7 @@ ui <- fluidPage(
                       p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
                       hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
                       selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines"),
-                      selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
+                      selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrBr"),
                       hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                       radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
                       br(),
@@ -535,7 +541,6 @@ server <- shinyServer(function(input,output,session) {
   filteredriskname[[input$Riskfishinggear,1]]
   
   })
-  
 
   proxy <- leafletProxy("prediction")
   
@@ -636,28 +641,25 @@ server <- shinyServer(function(input,output,session) {
     
     observe({
       
-      riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
+      # riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
       
     # For one colorscale across all behavioral states
       # riskmax = maxValue(riskstack) 
       # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmax[!is.na(riskmax)])), na.color = "transparent")
       # rm(riskmax)
       
-      riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
-      
       # For a single color palette across behavioral states
+      # riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
+      
       # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")
      
       # For a dynamic color palette
-      colorpalrisk <- reactive({colorNumeric(c('#abd2e1', brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")})
+      # colorpalrisk <- reactive({colorNumeric(c('#abd2e1', brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")}); rm(riskmaxbehavior)
       
-      colorpalrisk <- reactive({colorNumeric(c('#abd2e1', brewer.pal(n = 5,input$colorsRisk)), c(0, max(values(filteredriskgear()))), na.color = "transparent")})
+      colorpalrisk <- reactive({colorNumeric(sptw_brewer_pal(n = 5, input$colorsRisk), c(min(values(filteredriskgear())), max(values(filteredriskgear()))), na.color = "transparent")})
         
       pal <- colorpalrisk()
-      # c('f0f0f0',brewer.pal(n=9,"Reds"))
-      
-      rm(riskmaxbehavior)
-                       
+
       proxy %>%
         removeControl(legend) %>% # Removes legend on gear change
         addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
