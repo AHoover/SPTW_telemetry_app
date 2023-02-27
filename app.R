@@ -571,11 +571,14 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$GFWPlots, {
     
     colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
-
+    
+    updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
+    
     #Always clear the group first on the observed event
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click
 
     if(input$GFWPlots == 1){
+      updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
       observe({
         pal <- colorpal()
         proxy %>%
@@ -591,7 +594,10 @@ server <- shinyServer(function(input,output,session) {
     
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") 
     
+    updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
+    
     if(input$GFWPlots == 2){
+      updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
       observe({
         pal <- colorpal2()
         proxy %>%
@@ -607,14 +613,17 @@ server <- shinyServer(function(input,output,session) {
     colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 120, ceiling(max(values(filteredgear()),na.rm=T))), na.color = "transparent")})
     
     #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click 
     
     if(input$PlotGear){
       updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
+      updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
+      
       observe({
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
+          clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% 
           addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
           addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")
           })
@@ -625,6 +634,7 @@ server <- shinyServer(function(input,output,session) {
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
 
     updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
+    
     updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
   })
   
@@ -641,8 +651,10 @@ server <- shinyServer(function(input,output,session) {
     #Always clear the group first on the observed event
     proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") # %>% clearGroup(group = "Fisheries.group") 
     
+    
+    updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
+    
     observe({
-      
       # riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
       
     # For one colorscale across all behavioral states
@@ -661,7 +673,7 @@ server <- shinyServer(function(input,output,session) {
       colorpalrisk <- reactive({colorNumeric(sptw_brewer_pal(n = 5, input$colorsRisk), c(min(values(filteredriskgear())), max(values(filteredriskgear()))), na.color = "#abd2e1")})
         
       pal <- colorpalrisk()
-
+      
       proxy %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>%
         removeControl(legend) %>% # Removes legend on gear change
         addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
