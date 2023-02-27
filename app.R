@@ -228,10 +228,10 @@ ui <- fluidPage(
                                            color: inherit;
                                          }
                                        }"))),
-                                                 bsCollapse(id = 'textpanels', multiple = FALSE,
+                                                 suppressWarnings(bsCollapse(id = 'textpanels', multiple = FALSE,
                                                             
                                                             bsCollapsePanel(title = p('>  What is South Pacific TurtleWatch?', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current model shown below is based on data from satellite-tagged leatherbacks. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, will eventually be added. More information can be found in ', a(em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
-                                                            bsCollapsePanel(title = p('>  Leatherback Tagging', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).'))))),
+                                                            bsCollapsePanel(title = p('>  Leatherback Tagging', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).')))))),
                         br(),
                         hr(),
                         fluidRow(column(width = 2),
@@ -306,10 +306,10 @@ ui <- fluidPage(
                                            color: inherit;
                                          }
                                        }"))),
-                                                 bsCollapse(id = 'textpanels', multiple = FALSE,                
+                                                 suppressWarnings(bsCollapse(id = 'textpanels2', multiple = FALSE,                
                                                             bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
 
-                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),'). <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box.'))))))),
+                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),'). <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box.')))))))),
                           br(),
                           hr(),
                         fluidRow(column(width = 2),
@@ -583,14 +583,14 @@ server <- shinyServer(function(input,output,session) {
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
           addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
   
   observeEvent(input$GFWPlots, {
     
-    colorpal2 <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
+    colorpal2 <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()), na.rm=T))), na.color = "transparent")})
     
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") 
     
@@ -602,7 +602,7 @@ server <- shinyServer(function(input,output,session) {
         pal <- colorpal2()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
           addLegend(pal = pal, values = values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
@@ -624,7 +624,7 @@ server <- shinyServer(function(input,output,session) {
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
           clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% 
-          addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
           addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")
           })
     }
@@ -676,7 +676,7 @@ server <- shinyServer(function(input,output,session) {
       
       proxy %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>%
         removeControl(legend) %>% # Removes legend on gear change
-        addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
+        addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group", project = FALSE) %>%
         addLegend(pal = pal, values = values(filteredriskgear()), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright", labFormat =  function(type, cuts, p) {n = length(cuts);cuts[n] = paste("Higher Risk"); for(i in 2:(n-1)){cuts[i] = ""};cuts[1] = paste("Lower Risk");cuts[2]=cuts[2]; paste0(cuts[-n], cuts[-1])}) %>% 
         showGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))
         # addLegend(pal = pal, values = pmax(values(riskbehavior)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # For the dynamic color palette varying with behavior  
