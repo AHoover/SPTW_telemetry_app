@@ -140,11 +140,20 @@ names(fisheries) <- paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"
 gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
 names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
-## Load Hidden Markov Model Relative Risk of Interaction Analysis
+## Load Hidden Markov Model Relative Risk of Interaction Analysis and Area
 
 ### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines, g7 = squid jiggers, g8 = trawlers, g9 = tuna purse seines
 
 load(paste0("data/risk_g1-9_s123_", month , ".rda"))
+
+maprisk = readRDS("data/fisheries_risk_area.rds")
+
+## Load personalized color palette
+
+source("data/sptw_brewer_pal.R")
+
+reducedcolors = c('YlOrBr',"YlOrRd","RdBu","Oranges","Purples","Reds")
+colorlist.risk = brewer.pal.info[row.names(brewer.pal.info) %in% reducedcolors,]
 
 ## Load Archived Images
 
@@ -219,10 +228,10 @@ ui <- fluidPage(
                                            color: inherit;
                                          }
                                        }"))),
-                                                 bsCollapse(id = 'textpanels', multiple = FALSE,
+                                                 suppressWarnings(bsCollapse(id = 'textpanels', multiple = FALSE,
                                                             
                                                             bsCollapsePanel(title = p('>  What is South Pacific TurtleWatch?', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current model shown below is based on data from satellite-tagged leatherbacks. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, will eventually be added. More information can be found in ', a(em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
-                                                            bsCollapsePanel(title = p('>  Leatherback Tagging', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).'))))),
+                                                            bsCollapsePanel(title = p('>  Leatherback Tagging', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;border-radius:2px"), p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).')))))),
                         br(),
                         hr(),
                         fluidRow(column(width = 2),
@@ -297,10 +306,10 @@ ui <- fluidPage(
                                            color: inherit;
                                          }
                                        }"))),
-                                                 bsCollapse(id = 'textpanels', multiple = FALSE,                
+                                                 suppressWarnings(bsCollapse(id = 'textpanels2', multiple = FALSE,                
                                                             bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
 
-                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),').'))))))),
+                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),'). <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box.')))))))),
                           br(),
                           hr(),
                         fluidRow(column(width = 2),
@@ -330,13 +339,11 @@ ui <- fluidPage(
                    selectInput(inputId = "FisheriesYear", label = "Yearly Fishing Effort (hr/km^2)", choices = c("2020" = 4, "2019" = 3, "2018" = 2, "2017" = 1), selected = "2020"),
                    hr(style = "border-color:#cd6ebe;opacity:0.2;margin-top:10px;margin-bottom:2.5px;"),
                    radioButtons("GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0)),
-                   selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "Reds"),
+                   selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
                    hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                    selectInput(inputId = "Fishinggear", label = "2020 Fishing Effort by Gear (hr/km^2)", choices = c("Drifting longlines" = 7, "Tuna purse seines" = 6, "Squid jigger" = 2, "Purse seines" = 8, "Other purse seines" = 5, "Pole and line" = 9, "Set longlines" = 4, "Trawlers" = 3, "Trollers" = 11, "Set gillnets" = 10, "Fishing" = 1), selected = "Trollers"),
                    checkboxInput("PlotGear", "Plot 2020 Fishing Effort by Gear", FALSE),
-                   tags$head(tags$style(type = "text/css", ".shiny-input-container {margin-bottom: 0px;}",".checkbox {margin-bottom: 0px;}")),
-                   p("(May be slow to plot)", style = "font-size:75%;font-color:#757575;padding:0.1px;text-align:center"),
-                   div(style = "display:inline-block;width:10%;margin-left:5%;max-width:100%;",
+                   div(style = "display:inline-block;width:10%;margin-left:5%;max-width:100%;margin-top:5px",
                        actionButton(inputId = "hideFisheries",
                          label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a")),
                    br(),
@@ -350,7 +357,8 @@ ui <- fluidPage(
                   mainPanel(width = 10,
                     fluidRow(
                       add_busy_bar(color = "#a2b03a",centered = TRUE),
-                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 1.2, hide.ui = FALSE, proxy.height = '625px'), width = 10, absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);margin-right:20px;margin-left:10px", tags$b(tags$em("::Under Construction - Experimental Product::")))))),
+                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 1.2, hide.ui = FALSE, proxy.height = '625px'), width = 10, absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);margin-right:20px;margin-left:10px", tags$b(tags$em("::Under Construction - Experimental Product::"))))), p("Leatherback Residence Time (Days) along the Eastern Pacific with Exclusive Economic Zones (shown in gray) and Costa Rica Dome important leatherback habitat (shown in light blue)", style = "text-align:center;color:#A2B03A;padding:2px;font-size:105%"),
+                             ),
                       br(),
                       column(width = 2, 
                              a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
@@ -361,20 +369,18 @@ ui <- fluidPage(
                       p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
                       hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
                       selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines"),
-                      selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
+                      selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(colorlist.risk, category %in% c("seq", "div"))), selected = "YlOrBr"),
                       hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
                       radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
                       br(),
                       actionButton(inputId = "hideFisheriesRisk",
                                    label = HTML("Clear <br/>Risk of <br/>Interaction"), style = "font-weight:bold;text-align:center;font-size:105%;color:#FD6B31;padding:15px;border:2px;box-shadow: 0 0 11px 2px #FD6B31;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #FD6B31"),
+                      tags$head(tags$style(type = "text/css", ".shiny-input-container {margin-bottom: 0px;}",".checkbox {margin-bottom: 0px;}")),
                       ),
                     ),
-                    fluidRow(
-                      br(),
-                      column(p("Leatherback Residence Time (Days) along the Eastern Pacific with Exclusive Economic Zones (shown in gray) and Costa Rica Dome important leatherback habitat (shown in light blue)", style = "text-align:center;color:#A2B03A;padding:2px;font-size:105%"), width = 10)),
                       br(),
                       br(),
-                      fluidRow(column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", target = "_blank", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", target = "_blank", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", target = "_blank", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", target = "_blank", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", target = "_blank", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", target = "_blank", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", target = "_blank", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
+                    fluidRow(column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", target = "_blank", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", target = "_blank", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", target = "_blank", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", target = "_blank", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", target = "_blank", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", target = "_blank", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", target = "_blank", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
                     width = 12)),
                     )
                 ),
@@ -467,7 +473,7 @@ server <- shinyServer(function(input,output,session) {
     
     leaflet() %>% addTiles() %>%
     addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>% # Use FALSE if error in palette occurs
-    addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)") %>%
+    addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
       addMapPane("EBSAs_small", zIndex = 430) %>% 
@@ -475,19 +481,20 @@ server <- shinyServer(function(input,output,session) {
       addMapPane("MPAs", zIndex = 430) %>%
       addMapPane("Relative Risk of Interaction", zIndex = 400) %>% # "Overlap Index"
       addPolygons(data = ebsas, weight=1.5, label = ~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
-      addPolygons(data = ebsas_small, weight = 1.5,label=~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
+      addPolygons(data = ebsas_small, weight = 1.5, label=~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
       addPolygons(data = CRD, weight = 1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
       addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
       addPolygons(data = allmpas, weight = 1.5, opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
       addPolygons(data = countriessubset, weight = 1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country"), group = "Countries") %>%
+      addPolygons(data = maprisk, weight = 1.5, label = 'Fisheries Risk Analysis Coverage', fillOpacity = 0, color = "#495a69", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "Relative Risk of Interaction"), group = HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) %>%
       setView(-105, -8, zoom = 3) %>% 
       # Add layer controls
       addLayersControl(
         position = "bottomleft",
         #baseGroups = c("OSM (default)", "Toner", "Toner Lite"),
-        overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries"),
+        overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
-      hideGroup(c("EBSAs","MPAs and Other <br>Protected Areas", HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 1</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 2</label>'), HTML('<label style=\"color:rgb(253, 107, 49);\">Drifting Longlines <br>State 3</label>'))) %>%
+      hideGroup(c("EBSAs", "MPAs and Other <br>Protected Areas", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))) %>%
       htmlwidgets::onRender("
         function() {
             $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;margin-right:-2px;\">Areas of Interest<br/></label>');
@@ -535,7 +542,6 @@ server <- shinyServer(function(input,output,session) {
   filteredriskname[[input$Riskfishinggear,1]]
   
   })
-  
 
   proxy <- leafletProxy("prediction")
   
@@ -565,32 +571,38 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$GFWPlots, {
     
     colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
-
+    
+    updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
+    
     #Always clear the group first on the observed event
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click
 
     if(input$GFWPlots == 1){
+      updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
       observe({
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
           addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
   
   observeEvent(input$GFWPlots, {
     
-    colorpal2 <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
+    colorpal2 <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()), na.rm=T))), na.color = "transparent")})
     
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") 
     
+    updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
+    
     if(input$GFWPlots == 2){
+      updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
       observe({
         pal <- colorpal2()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
+          addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
           addLegend(pal = pal, values = values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
     }
   })
@@ -601,16 +613,20 @@ server <- shinyServer(function(input,output,session) {
     colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 120, ceiling(max(values(filteredgear()),na.rm=T))), na.color = "transparent")})
     
     #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click 
     
     if(input$PlotGear){
       updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
+      updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
+      
       observe({
         pal <- colorpal()
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
-          addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group") %>%
-          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+          clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% 
+          addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
+          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")
+          })
     }
   })
 
@@ -618,6 +634,7 @@ server <- shinyServer(function(input,output,session) {
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
 
     updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
+    
     updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
   })
   
@@ -632,41 +649,47 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$PlotRisk, {
     
     #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") # %>% clearGroup(group = "Fisheries.group") 
+    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") # %>% clearGroup(group = "Fisheries.group") 
+    
+    
+    updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
     
     observe({
-      
-      riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
+      # riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
       
     # For one colorscale across all behavioral states
       # riskmax = maxValue(riskstack) 
       # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmax[!is.na(riskmax)])), na.color = "transparent")
       # rm(riskmax)
       
-      riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
-      
       # For a single color palette across behavioral states
+      # riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
+      
       # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")
      
       # For a dynamic color palette
-      colorpalrisk <- reactive({colorNumeric(c('grey75',brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")})
+      # colorpalrisk <- reactive({colorNumeric(c('#abd2e1', brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")}); rm(riskmaxbehavior)
       
+      colorpalrisk <- reactive({colorNumeric(sptw_brewer_pal(n = 5, input$colorsRisk), c(min(values(filteredriskgear())), max(values(filteredriskgear()))), na.color = "#abd2e1")})
+        
       pal <- colorpalrisk()
-      # c('f0f0f0',brewer.pal(n=9,"Reds"))
       
-      rm(riskmaxbehavior)
-
-      proxy %>%
+      proxy %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>%
         removeControl(legend) %>% # Removes legend on gear change
-        addRasterImage(filteredriskgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group") %>%
-        addLegend(pal = pal, values = pmax(values(riskbehavior)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright")
+        addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group", project = FALSE) %>%
+        addLegend(pal = pal, values = values(filteredriskgear()), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright", labFormat =  function(type, cuts, p) {n = length(cuts);cuts[n] = paste("Higher Risk"); for(i in 2:(n-1)){cuts[i] = ""};cuts[1] = paste("Lower Risk");cuts[2]=cuts[2]; paste0(cuts[-n], cuts[-1])}) %>% 
+        showGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))
+        # addLegend(pal = pal, values = pmax(values(riskbehavior)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # For the dynamic color palette varying with behavior  
         # addLegend(pal = pal, values = pmax(values(riskstack)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);;margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # Run this when running the same legend across states, ie riskmax = maxValue(riskstack)
-      })
+     })
     
   })
   
   observeEvent(input$hideFisheriesRisk, {
-    leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend")
+    leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>%
+      addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>%
+      addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>% 
+      hideGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) # Replot the prediction raster, but clear and replot if button is double-clicked without 
     
     updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines") 
                       
