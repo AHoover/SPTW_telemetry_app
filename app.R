@@ -79,9 +79,9 @@ file_dater <- paste0(year,"_",month)
 #### This is to fix an error for the days early in the month where the previous month's data is not yet available to update the predictions. 
 
 tryCatch(
-  {
+  exp = {
     
-  load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+    suppressWarnings(load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv))
     
   },
   
@@ -89,15 +89,18 @@ tryCatch(
   
   error = function(e){
     
-  year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')
-  month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')
-  file_dater <- paste0(year,"_", month)
-  
-  # Reset prediction year and month for later code 
-  predictyear <<- year
-  predictmonth <<- month.name[as.numeric(month)]
-  message(paste("Prediction month is", predictmonth, "and month is", month))
-  
+    year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')
+    month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')
+    file_dater <- paste0(year,"_", month)
+    
+    # Reset prediction year and month for later code 
+    predictyear <<- year
+    predictmonth <<- month.name[as.numeric(month)]
+    message(paste("Prediction month is", predictmonth, "and month is", month))
+    message(paste("Most recent month's data unavailable."))
+    
+    load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+    
   }
   
 )
