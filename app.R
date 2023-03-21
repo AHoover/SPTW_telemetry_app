@@ -46,6 +46,7 @@ tags$style(
 ## Define year and month of interest for prediction
 
 # Extract month (most-recent month with data available) and year of interest
+
 currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
 message(paste("Current month is",currentmonth))
 
@@ -55,7 +56,7 @@ if(currentmonth > 1){
   previousmonth <- 12
 }
 
-predictmonth <<- month.name[previousmonth] # Fix error
+predictmonth <<- month.name[previousmonth]
 
 month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
 message(paste("Prediction month is",predictmonth, "and month is", month))
@@ -76,9 +77,10 @@ file_dater <- paste0(year,"_",month)
 
 ## Load Prediction; set color palette
 ### Confirm data in folder is up-to-date for the most recent month.
-#### This is to fix an error for the days early in the month where the previous month's data is not yet available to update the predictions. 
+#### This is to fix an error for early in each month where the previous month's data are not yet available to update predictions. 
 
 tryCatch(
+  
   exp = {
     
     suppressWarnings(load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv))
@@ -94,6 +96,7 @@ tryCatch(
     file_dater <- paste0(year,"_", month)
     
     # Reset prediction year and month for later code 
+    
     predictyear <<- year
     predictmonth <<- month.name[as.numeric(month)]
     message(paste("Prediction month is", predictmonth, "and month is", month))
@@ -102,17 +105,16 @@ tryCatch(
     load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
     
   }
-  
 )
 
-# Alternatively, tolower(month.abb[as.numeric(month)]) if lowercase month
+### Create color palette for prediction raster, which will be on the original plot
 
 palpredict <- colorNumeric("magma", values(predictraster), reverse=FALSE, na.color = "transparent")
 
 ## Load country and EEZ map data
 ### Subsets were created from marineregions.org
 
-SPshpallsubset <- read_rds("data/SPshpallsubset.rds") 
+PacificEEZ <- read_rds("data/PacificEEZs.rds") 
 
 countriessubset <- read_rds("data/countriessubset.rds") 
 
@@ -125,9 +127,9 @@ EBSA_all <- read_rds("data/EBSAs_CBD.rds")
 
 ebsas <- EBSA_all[-which(EBSA_all$NAME == 'Costa Rica Dome'|EBSA_all$NAME == 'Galapagos'|EBSA_all$NAME == 'Peru Upwelling Cores'|EBSA_all$NAME == 'Cordillera Malpelo'),]
 
-ebsas_small <- EBSA_all[which(EBSA_all$NAME == 'Galapagos'|EBSA_all$NAME == 'Peru Upwelling Cores'|EBSA_all$NAME == 'Cordillera Malpelo'),]
+ebsas_small <- EBSA_all[which(EBSA_all$NAME == 'Galapagos'|EBSA_all$NAME == 'Peru Upwelling Cores'|EBSA_all$NAME == 'Cordillera Malpelo'),] # These need to be separated in order to plot above others, allowing for the user to interact with the zones
 
-CRD <- EBSA_all[which(EBSA_all$NAME == 'Costa Rica Dome'),]
+CRD <- EBSA_all[which(EBSA_all$NAME == 'Costa Rica Dome'),] # Add a special layer for the Costa Rica Dome
 
 ## Load Marine Protected Areas and other protected areas
 
@@ -136,26 +138,25 @@ allmpas <- read_rds("data/MPAs_WDPA.rds")
 ## Load GFW Fishing Effort at 0.1 degrees for 2017-2020
 
 fisheries <- stack("data/Effort_Fishing_01deg_2017-2020.tif")
-names(fisheries) <- paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"))
+names(fisheries) <- paste0(c("Effort2017", "Effort2018", "Effort2019", "Effort2020"))
 
 ## Load GFW Fishing Effort by Gear for 2020
 
 gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
 names(gear2020) <- c("Other_fishing_gears", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
-## Load Hidden Markov Model Relative Risk of Interaction Analysis and Area
-
+## Load Hidden Markov Model Relative Risk of Interaction Analysis and analysis area
 ### g1 = drifting longlines, g2 = fishing, g3 = purse seines, g4 = pole and line, g5 = set gillnets, g6 = set longlines, g7 = squid jiggers, g8 = trawlers, g9 = tuna purse seines
 
-load(paste0("data/risk_g1-9_s123_", month , ".rda"))
+load(paste0("data/risk_g1-9_s123_", month, ".rda"))
 
 maprisk = readRDS("data/fisheries_risk_area.rds")
 
-## Load personalized color palette
+### Load personalized color palette for HMM results
 
 source("data/sptw_brewer_pal.R")
 
-reducedcolors = c('YlOrBr',"YlOrRd","RdBu","Oranges","Purples","Reds")
+reducedcolors = c('YlOrBr', "YlOrRd", "RdBu", "Oranges", "Purples", "Reds")
 colorlist.risk = brewer.pal.info[row.names(brewer.pal.info) %in% reducedcolors,]
 
 ## Load Archived Images
@@ -479,7 +480,6 @@ ui <- fluidPage(
 
 ## Create prediction map using Leaflet that includes the EEZ of each country in the Eastern Pacific area of interest
 ### Imperfect country map: only simple polygons, not exact coastline match
-### Memory issues with shinyapps.io server version -- data-heavy items have been replaced with still images 
 
 server <- shinyServer(function(input,output,session) {
   
@@ -493,11 +493,11 @@ server <- shinyServer(function(input,output,session) {
       addMapPane("EBSAs_small", zIndex = 430) %>% 
       addMapPane("EEZ", zIndex = 410) %>% 
       addMapPane("MPAs", zIndex = 430) %>%
-      addMapPane("Relative Risk of Interaction", zIndex = 400) %>% # "Overlap Index"
+      addMapPane("Relative Risk of Interaction", zIndex = 400) %>%
       addPolygons(data = ebsas, weight=1.5, label = ~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs"), group = "EBSAs") %>% 
       addPolygons(data = ebsas_small, weight = 1.5, label=~NAME, fillOpacity = 0.3, color = "white", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "EBSAs") %>% 
-      addPolygons(data = CRD, weight = 1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% #176302 #cf5a0c
-      addPolygons(data = SPshpallsubset, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
+      addPolygons(data = CRD, weight = 1.5,label=~NAME, fillOpacity = 0.5, color = "#46b1e6", highlightOptions = highlightOptions(color = "white", weight = 3.5, bringToFront = TRUE), options = pathOptions(pane = "EBSAs_small"), group = "Costa Rica Dome <br>EBSA") %>% 
+      addPolygons(data = PacificEEZ, weight = 1.5,  opacity = 0.6, fillOpacity = 0.4, label = ~geoname, color = "#3c4b57", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "EEZ"), group = "EEZs") %>%
       addPolygons(data = allmpas, weight = 1.5, opacity = 0.8, fillOpacity = 0.3, label=~LABEL, color = "goldenrod", highlightOptions = highlightOptions(color = "white", weight = 2, bringToFront = TRUE), options = pathOptions(pane = "MPAs"), group = "MPAs and Other <br>Protected Areas") %>%
       addPolygons(data = countriessubset, weight = 1.5, label = ~NAME, fillOpacity = 0.4, color = "#a2b03a", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "country"), group = "Countries") %>%
       addPolygons(data = maprisk, weight = 1.5, label = 'Fisheries Risk Analysis Coverage', fillOpacity = 0, color = "#495a69", highlightOptions = highlightOptions(color = "#3c4b57", weight = 3, bringToFront = TRUE), options = pathOptions(pane = "Relative Risk of Interaction"), group = HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) %>%
@@ -505,7 +505,6 @@ server <- shinyServer(function(input,output,session) {
       # Add layer controls
       addLayersControl(
         position = "bottomleft",
-        #baseGroups = c("OSM (default)", "Toner", "Toner Lite"),
         overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
       hideGroup(c("EBSAs", "MPAs and Other <br>Protected Areas", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))) %>%
@@ -544,14 +543,8 @@ server <- shinyServer(function(input,output,session) {
   })
   
   legendfilteredrisk <- reactive({
-    
-  # filteredriskname = data.frame(
-  #   names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines'),
-  #   id = seq(6))
   
-  filteredriskname = data.frame(
-    names = c('Drifting longlines', 'Other fishing gears', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines', 'Squid jiggers', 'Trawlers', 'Tuna purse seines'),
-    id = seq(9))
+  filteredriskname = data.frame(names = c('Drifting longlines', 'Other fishing gears', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines', 'Squid jiggers', 'Trawlers', 'Tuna purse seines'), id = seq(9))
  
   filteredriskname[[input$Riskfishinggear, 1]]
   
@@ -560,6 +553,7 @@ server <- shinyServer(function(input,output,session) {
   proxy <- leafletProxy("prediction")
   
   observeEvent(input$StaticMap, {
+    
     showModal(modalDialog(
       title = p('Eastern Pacific leatherback predictions for ', predictmonth, predictyear),
       div(img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"), height = '600px', width = '800px')),
@@ -569,6 +563,7 @@ server <- shinyServer(function(input,output,session) {
       fade = TRUE,
       footer = NULL
     ))
+    
     })
   
   output$downloadstatic <- downloadHandler(
@@ -578,8 +573,10 @@ server <- shinyServer(function(input,output,session) {
     })   
 
   observeEvent(input$opacity, {
+    
     proxy %>% clearGroup(group = "predictionmap") %>%
       addRasterImage(predictraster, colors = palpredict, opacity = input$opacity, maxBytes=40 * 1024 * 1024, group = "predictionmap")
+    
   })
   
   observeEvent(input$GFWPlots, {
@@ -592,6 +589,7 @@ server <- shinyServer(function(input,output,session) {
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click
 
     if(input$GFWPlots == 1){
+      
       updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
       observe({
         pal <- colorpal()
@@ -599,6 +597,7 @@ server <- shinyServer(function(input,output,session) {
           removeControl(legend) %>% # Removes legend on year change
           addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
           addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+      
     }
   })
   
@@ -611,13 +610,15 @@ server <- shinyServer(function(input,output,session) {
     updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
     
     if(input$GFWPlots == 2){
+      
       updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
       observe({
         pal <- colorpal2()
         proxy %>%
-          removeControl(legend) %>% # Removes legend on year change
+          removeControl(legend) %>% 
           addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
           addLegend(pal = pal, values = values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+      
     }
   })
   
@@ -626,63 +627,54 @@ server <- shinyServer(function(input,output,session) {
     paletterev <- rev(viridis(6))
     colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 120, ceiling(max(values(filteredgear()),na.rm=T))), na.color = "transparent")})
     
-    #Always clear the group first on the observed event
-    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") # Removes legend on click 
+    proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend")
     
     if(input$PlotGear){
       updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
       updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
       
       observe({
+        
         pal <- colorpal()
         proxy %>%
-          removeControl(legend) %>% # Removes legend on year change
+          removeControl(legend) %>% 
           clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% 
           addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
-          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")
-          })
+          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+      
     }
   })
 
   observeEvent(input$hideFisheries, {
+    
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend")
 
     updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
     
     updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
+    
   })
   
   observeEvent(input$usermap, {
+    
     screenshot(id = "prediction", filename = paste0("South_Pacific_TurtleWatch_", predictmonth, year))
+    
   })
   
   observeEvent(input$moveToInteractive, {
+    
     updateTabsetPanel(session = session, inputId = "maptabs", selected = "Interactive Map")
+    
   })
   
   observeEvent(input$PlotRisk, {
     
-    #Always clear the group first on the observed event
     proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") # %>% clearGroup(group = "Fisheries.group") 
     
     
     updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
     
     observe({
-      # riskbehavior = raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))
-      
-    # For one colorscale across all behavioral states
-      # riskmax = maxValue(riskstack) 
-      # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmax[!is.na(riskmax)])), na.color = "transparent")
-      # rm(riskmax)
-      
-      # For a single color palette across behavioral states
-      # riskmaxbehavior = maxValue(raster::subset(riskstack, grep( paste0('s', as.character(input$PlotRisk)), names(riskstack), value = T))) # Have a different scale across behavioral states
-      
-      # pal <- colorNumeric(c("#abd2e1","#e6ac00","#932d01"), c(0.0001, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")
-     
-      # For a dynamic color palette
-      # colorpalrisk <- reactive({colorNumeric(c('#abd2e1', brewer.pal(n = 5,input$colorsRisk)), c(0.00015, max(riskmaxbehavior[!is.na(riskmaxbehavior)])), na.color = "transparent")}); rm(riskmaxbehavior)
       
       colorpalrisk <- reactive({colorNumeric(sptw_brewer_pal(n = 5, input$colorsRisk), c(min(values(filteredriskgear())), max(values(filteredriskgear()))), na.color = "#abd2e1")})
         
@@ -692,33 +684,36 @@ server <- shinyServer(function(input,output,session) {
         removeControl(legend) %>% # Removes legend on gear change
         addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group", project = FALSE) %>%
         addLegend(pal = pal, values = values(filteredriskgear()), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright", labFormat =  function(type, cuts, p) {n = length(cuts);cuts[n] = paste("Higher Risk"); for(i in 2:(n-1)){cuts[i] = ""};cuts[1] = paste("Lower Risk");cuts[2]=cuts[2]; paste0(cuts[-n], cuts[-1])}) %>% 
-        showGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))
-        # addLegend(pal = pal, values = pmax(values(riskbehavior)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # For the dynamic color palette varying with behavior  
-        # addLegend(pal = pal, values = pmax(values(riskstack)), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);;margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright") # Run this when running the same legend across states, ie riskmax = maxValue(riskstack)
-     })
+        showGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))})
     
   })
   
   observeEvent(input$hideFisheriesRisk, {
+    
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>%
       addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>%
       addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>% 
-      hideGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) # Replot the prediction raster, but clear and replot if button is double-clicked without 
+      hideGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) # Replot the prediction raster; clear and replot if button is double-clicked 
     
     updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9, "Other fishing gears" = 2), selected = "Drifting longlines") 
                       
     updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
+    
   })
   
   # track_usage(storage_mode = store_json(path = "logs/"))
   
-  output[["slickr"]] <- renderSlickR({
-    slickR(imgs)
-  })
-  
-  output[["slickrImgName"]] <- renderText({
-    paste0("CURRENT IMAGE: ", basename(imgs[input$slickr_output_current$.center]))
-  })
+  # output[["slickr"]] <- renderSlickR({
+
+  #   slickR(imgs)
+
+  # })
+
+  # output[["slickrImgName"]] <- renderText({
+
+    # paste0("CURRENT IMAGE: ", basename(imgs[input$slickr_output_current$.center]))
+
+  # })
   
 })
 
