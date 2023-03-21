@@ -133,7 +133,7 @@ CRD <- EBSA_all[which(EBSA_all$NAME == 'Costa Rica Dome'),] # Add a special laye
 
 ## Load Marine Protected Areas and other protected areas
 
-allmpas <- read_rds("data/MPAs_WDPA.rds")
+allmpas <- read_rds("data/MPAs_WDPA_simplified.rds")
 
 ## Load GFW Fishing Effort at 0.1 degrees for 2017-2020
 
