@@ -141,7 +141,7 @@ names(fisheries) <- paste0(c("Effort2017","Effort2018","Effort2019","Effort2020"
 ## Load GFW Fishing Effort by Gear for 2020
 
 gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
-names(gear2020) <- c("Fishing", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
+names(gear2020) <- c("Other_fishing_gears", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
 ## Load Hidden Markov Model Relative Risk of Interaction Analysis and Area
 
@@ -312,17 +312,56 @@ ui <- fluidPage(
                                                  suppressWarnings(bsCollapse(id = 'textpanels2', multiple = FALSE,                
                                                             bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
 
-                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Prep'),'). <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box.')))))))),
+                                                            bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Review'),'). <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box.')))))))),
                           br(),
                           hr(),
                         fluidRow(column(width = 2),
                           column(width = 8,
-                            h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold")))),
+                            h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold"))),
+                          column(width = 2,
+                                 a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%")),
                             br(),
-                         
-               sidebarLayout(
-                 sidebarPanel(
-                   p("Global Fishing Watch (GFW) Fishing Data", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", width = 2,
+                        fluidRow(column(width = 2,
+                                        tags$head(
+                                          tags$style(".modal-dialog{ width:825px}",
+                                                     HTML(
+                                            ".checkbox {margin:0;text-align:left}
+                        .checkbox p {margin:0;text-align:left}
+                        .radio label {margin:0;text-align:left}
+                        .radio label {margin:0;text-align:left}
+                        .shiny-input-container {margin-bottom:0px}
+                        .control-label {text-align:center;margin-bottom:0px}
+                        .label {text-align:center}
+                        .shiny-input-container {text-align:-webkit-left}
+                        .legend {line-height:15px}
+                        .leaflet-top .leaflet-control {margin-top:3px}
+                        .leaflet-bottom .leaflet-control {margin-bottom:2px}
+                        .leaflet-control-layers label {margin-top: 0px; margin-bottom: 0px}
+                        "))),
+                                        p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
+                                        hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
+                                        selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9, "Other fishing gears" = 2), selected = "Drifting longlines"),
+                                        selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(colorlist.risk, category %in% c("seq", "div"))), selected = "YlOrBr"),
+                                        hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
+                                        radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
+                                        br(),
+                                        actionButton(inputId = "hideFisheriesRisk",
+                                                     label = HTML("Clear <br/>Risk of <br/>Interaction"), style = "font-weight:bold;text-align:center;font-size:105%;color:#FD6B31;padding:15px;border:2px;box-shadow: 0 0 11px 2px #FD6B31;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #FD6B31"),
+                                        tags$head(tags$style(type = "text/css", ".shiny-input-container {margin-bottom: 0px;}",".checkbox {margin-bottom: 0px;}")),
+                        ),
+                        column(width = 8, add_busy_bar(color = "#a2b03a",centered = TRUE),
+                        p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 1.2, hide.ui = FALSE, proxy.height = '625px'), absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);margin-right:20px;margin-left:10px", tags$b(tags$em("::Under Construction - Experimental Product::"))))), p("Leatherback Residence Time (Days) along the Eastern Pacific with Exclusive Economic Zones (shown in gray) and Costa Rica Dome important leatherback habitat (shown in light blue)", style = "text-align:center;color:#A2B03A;padding:2px;font-size:105%"),
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        br(),
+                        p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", target = "_blank", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", target = "_blank", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", target = "_blank", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", target = "_blank", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", target = "_blank", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", target = "_blank", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", target = "_blank", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
+                        ),
+                        br(),
+                   column(width = 2,                   
+                   p("Global Fishing Watch (GFW) Fishing Data", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px",
                    hr(style = "border-color:#cd6ebe;opacity:0.8;margin-top:10px;margin-bottom:20px;"),
                    tags$head(
                      tags$style(HTML(
@@ -344,7 +383,7 @@ ui <- fluidPage(
                    radioButtons("GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0)),
                    selectInput("colors", "Change Color Scale", choices = rownames(subset(brewer.pal.info, category %in% c("seq", "div"))), selected = "YlOrRd"),
                    hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
-                   selectInput(inputId = "Fishinggear", label = "2020 Fishing Effort by Gear (hr/km^2)", choices = c("Drifting longlines" = 7, "Tuna purse seines" = 6, "Squid jigger" = 2, "Purse seines" = 8, "Other purse seines" = 5, "Pole and line" = 9, "Set longlines" = 4, "Trawlers" = 3, "Trollers" = 11, "Set gillnets" = 10, "Fishing" = 1), selected = "Trollers"),
+                   selectInput(inputId = "Fishinggear", label = "2020 Fishing Effort by Gear (hr/km^2)", choices = c("Drifting longlines" = 7, "Tuna purse seines" = 6, "Squid jigger" = 2, "Purse seines" = 8, "Other purse seines" = 5, "Pole and line" = 9, "Set longlines" = 4, "Trawlers" = 3, "Trollers" = 11, "Set gillnets" = 10, "Other fishing gears" = 1), selected = "Trollers"),
                    checkboxInput("PlotGear", "Plot 2020 Fishing Effort by Gear", FALSE),
                    div(style = "display:inline-block;width:10%;margin-left:5%;max-width:100%;margin-top:5px",
                        actionButton(inputId = "hideFisheries",
@@ -356,40 +395,12 @@ ui <- fluidPage(
                         "),
                    hr(style="border-color:#cd6ebe;opacity:0.2"),
                    p("GFW data are based on vessel AIS, thus representing a minimum estimate of fishing occurring in these areas (e.g. dependent on satellite coverage and AIS usage). More information can be found to the right.", style = "font-size:65%;font-color:#3c4b57;padding:5px")
+                   ),
                    ), 
-                  mainPanel(width = 10,
-                    fluidRow(
-                      add_busy_bar(color = "#a2b03a",centered = TRUE),
-                      column(p('Eastern Pacific leatherback predictions for ', predictmonth,predictyear), withSpinner(leafletOutput("prediction", height = '625px'), type = 6, color = "#a2b03a", size = 1.2, hide.ui = FALSE, proxy.height = '625px'), width = 10, absolutePanel(draggable = T,top = 0, left = 0, right = 0, tags$div(h2(style="text-align:center;color:#FF828C;padding:0px;background-color:rgba(180,180,180,0.3);margin-right:20px;margin-left:10px", tags$b(tags$em("::Under Construction - Experimental Product::"))))), p("Leatherback Residence Time (Days) along the Eastern Pacific with Exclusive Economic Zones (shown in gray) and Costa Rica Dome important leatherback habitat (shown in light blue)", style = "text-align:center;color:#A2B03A;padding:2px;font-size:105%"),
-                             ),
-                      br(),
-                      column(width = 2, 
-                             a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
+
                       br(),
                       br(),
-                      tags$head(tags$style(".modal-dialog{ width:825px}")),
-                      hr(style = "border-color:#cd6ebe;opacity:0.9;margin-top:10px;margin-bottom:20px;"),
-                      p("Relative Risk of Interaction Between Leatherbacks and Fishing Gear", style = "text-align:center"), style = "border:white; background-color:lavender;font-size:115%;font-color:#3c4b57;padding:15px;padding-top:10px", 
-                      hr(style = "border-color:#cd6ebe;opacity:0.5;margin-top:10px;margin-bottom:20px;"),
-                      selectInput(inputId = "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines"),
-                      selectInput("colorsRisk", "Change Color Scale", choices = rownames(subset(colorlist.risk, category %in% c("seq", "div"))), selected = "YlOrBr"),
-                      hr(style="margin-top:15px;margin-bottom:15px;border-color: #cd6ebe;opacity:0.4;border-top: #cd6ebe dashed 1.5px;"),
-                      radioButtons("PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = FALSE),
-                      br(),
-                      actionButton(inputId = "hideFisheriesRisk",
-                                   label = HTML("Clear <br/>Risk of <br/>Interaction"), style = "font-weight:bold;text-align:center;font-size:105%;color:#FD6B31;padding:15px;border:2px;box-shadow: 0 0 11px 2px #FD6B31;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #FD6B31"),
-                      tags$head(tags$style(type = "text/css", ".shiny-input-container {margin-bottom: 0px;}",".checkbox {margin-bottom: 0px;}")),
-                      ),
-                    ),
-                      br(),
-                      br(),
-                    fluidRow(column(p("Satellite data for this model were obtained from NASA, NOAA, including the ", a("ERDDAP interface", href = "https://coastwatch.pfeg.noaa.gov/erddap", target = "_blank", .noWS = "outside"), ", and the E.U. Copernicus Marine Service Information. Mapped EEZ data were obtained from marineregions.org (Flanders Marine Institute (2019). Maritime Boundaries Geodatabase: Maritime Boundaries and Exclusive Economic Zones (200NM), version 11. Available online at ", a("https://www.marineregions.org/", href = "https://www.marineregions.org/", target = "_blank", .noWS = "outside"), ". ", a("https://doi.org/10.14284/386", href = "https://doi.org/10.14284/386", target = "_blank", .noWS = "outside"), "). Data for Ecologically or Biologically Significant Marine Areas (EBSAs) were obtained from chm.cbd.int (CBD (2021). Ecologically or biologically significant marine areas. Available online at ", a("https://www.cbd.int/ebsa/", href = "https://www.cbd.int/ebsa/", target = "_blank", .noWS = "outside"), "). Data for Marine Protected Areas (MPAs) were obtained from protectedplanet.net (UNEP-WCMC and IUCN (2021), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], March 2021, Cambridge, UK: UNEP-WCMC and IUCN. Available at: ",a("https://www.protectedplanet.net/", href = "https://www.protectedplanet.net/", target = "_blank", .noWS = "outside"), "). For Global Fishing Watch data, cells were resampled from high-resolution 0.01 degree data to 0.1 degree cells, summing data across each cell to obtain total coverage for all fisheries. Cells in which fishing effort was zero indicate vessels were present, but they were determined not to be actively fishing. Areas without values did not have vessels present. Global Fishing Watch data were obtained from globalfishingwatch.org (Global Fishing Watch (2020), Global Fishing Watch map and data. Available online at ",a("https://globalfishingwatch.org/", href = "https://globalfishingwatch.org/", target = "_blank", .noWS = "outside"), "). More information and further data can be found there or in ", a("Tracking the global footprint of fisheries", href = "https://science.sciencemag.org/content/359/6378/904", target = "_blank", .noWS = "outside"), ".", style = "text-align:justify;color:white;background-color:gray;padding:15px;border-radius:10px", .noWS = c("after-begin", "before-end")),
-                    width = 12)),
-                    )
-                ),
-               br(),
-               br(),
-               )),
+                    )),
       
       tabPanel('Environmental Variables',
 
@@ -539,10 +550,10 @@ server <- shinyServer(function(input,output,session) {
   #   id = seq(6))
   
   filteredriskname = data.frame(
-    names = c('Drifting longlines', 'Fishing', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines', 'Squid jiggers', 'Trawlers', 'Tuna purse seines'),
+    names = c('Drifting longlines', 'Other fishing gears', 'Purse seines', 'Pole and line', 'Set gillnets', 'Set longlines', 'Squid jiggers', 'Trawlers', 'Tuna purse seines'),
     id = seq(9))
  
-  filteredriskname[[input$Riskfishinggear,1]]
+  filteredriskname[[input$Riskfishinggear, 1]]
   
   })
 
@@ -694,7 +705,7 @@ server <- shinyServer(function(input,output,session) {
       addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>% 
       hideGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) # Replot the prediction raster, but clear and replot if button is double-clicked without 
     
-    updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Fishing" = 2, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9), selected = "Drifting longlines") 
+    updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9, "Other fishing gears" = 2), selected = "Drifting longlines") 
                       
     updateRadioButtons(session = session, "PlotRisk", HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom:10px;\">Select Behavior of Interest</label>'), choices = c('Transiting' = 1, 'Residential/ Foraging' = 2, 'Deep diving/ Exploratory' = 3), selected = character(0))
   })
