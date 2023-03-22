@@ -241,36 +241,32 @@ ui <- fluidPage(
                         fluidRow(column(width = 2),
                                  column(width = 8,
                                         h2(p(predictmonth, predictyear, style = "color:#a2b03a;text-align:center; font-size: 125%; font-weight: bold")))),
-                                    fluidRow(
-                                      br(),
-                                      column(width = 2, 
-                                             a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%",
-                                             br(),
-                                             br(),
-                                             actionButton("StaticMap", strong(HTML("Download <br/> Static Map")), style="                      color: black; 
-                        background-color:white;
-                        border-color: #a2b03a;
-                        box-shadow: 5px 5px #a2b03a;
-                        border: 2px solid #a2b03a"),
-                                             br(),
-                                             br(),
-                                             actionButton(inputId = "moveToInteractive", label = HTML("Want a deeper dive? <br/> Try our interactive <br/> map")),
+                        fluidRow(
+                                  br(),
+                                  column(width = 2, 
+                                        a("Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center; color:black; background-color:lavender; padding:15px;border-radius:10px; font-size:110%",
+                                  br(),
+                                  br(),
+                                  actionButton("StaticMap", strong(HTML("Download <br/> Static Map")), style = "color: black; background-color:white; border-color: #a2b03a; box-shadow: 5px 5px #a2b03a; border: 2px solid #a2b03a"),
+                                  br(),
+                                  br(),
+                                  actionButton(inputId = "moveToInteractive", label = HTML("Want a deeper dive? <br/> Try our interactive <br/> map")),
                                              
-                            tags$style("#moveToInteractive {
-                            color: #46b1e6; 
-                            background-color:transparent;
-                            border-color: lavender;
-                            font-size:102%;
-                            padding:0px}
-                            #moveToInteractive:hover {
-                            color: #ffb93f;
-                            background-color: inherit;
-                            font-weight: bold;
-                            font-size:105%}"),
-                                             tags$head(tags$style(".modal-dialog{ width:825px}")),
+                              tags$style("#moveToInteractive {
+                                color: #46b1e6; 
+                                background-color:transparent;
+                                border-color: lavender;
+                                font-size:102%;
+                                padding:0px}
+                                #moveToInteractive:hover {
+                                color: #ffb93f;
+                                background-color: inherit;
+                                font-weight: bold;
+                                font-size:105%}"),
+                              tags$head(tags$style(".modal-dialog{width:825px}")),
                                       ),
-                                      column(width = 10,
-                                        div(img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"), height = '750px', width = '1050px',style ="display:block")),
+                              column(width = 10,
+                                        div(class="img-fluid img-thumbnail", img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"), height = 'auto', width = '100%',style ="display:block")),
                                         p("Leatherback Residence Time (Days) along the Eastern Pacific", style = "color:#A2B03A;padding:2px;padding-left:20px;margin-top:10px;font-size:105%"),
                                         ),
                                     ),
@@ -428,7 +424,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                              div(img(src = paste0("sst_05deg_",year,"_",month,".jpg"), height = '600px', width = '800px'),style = "text-align: center"), 
+                              div(class="img-fluid img-thumbnail",img(src = paste0("sst_05deg_",year,"_",month,".jpg"), height = 'auto', width = '100%'),style = "text-align: center"), 
                                     column(p("Sea Surface Temperature (\u00B0C) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
@@ -438,7 +434,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                                  div(img(src = paste0("fpi_05deg_", file_dater, ".jpg"), align='center', height = '600px', width = '800px'), style = "text-align: center"),
+                                  div(class="img-fluid img-thumbnail", img(src = paste0("fpi_05deg_", file_dater, ".jpg"), align='center', height = 'auto', width = '100%'), style = "text-align: center"),
                                       column(p("Front Density along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width=12),
                                     width = 12),
                     br(),
@@ -448,7 +444,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                                  div(img(src = paste0("ssh_05deg_",year,"_",month,".jpg"), align='center', height = '600px', width = '800px'), style="text-align: center"),
+                                  div(class="img-fluid img-thumbnail", img(src = paste0("ssh_05deg_",year,"_",month,".jpg"), align='center', height = 'auto', width = '100%'), style="text-align: center"),
                                       column(p("Sea Surface Height (SSH) (m) (absolute height) along the Eastern Pacific with Exclusive Economic Zones (shown in gray); data generated using E.U. Copernicus Marine Service Information", style="text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
@@ -458,7 +454,7 @@ ui <- fluidPage(
                   br(),
                   br(),
                   fluidRow(column(width = 1), column(
-                                div(img(src = "bathy_05deg.jpg", align = 'center', height = '600px', width = '800px'), style = "text-align: center"),
+                                div(class="img-fluid img-thumbnail", img(src = "bathy_05deg.jpg", align = 'center', height = 'auto', width = '100%'), style = "text-align: center"),
                                        column(p("Bathymetry (m) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:center;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
@@ -556,7 +552,7 @@ server <- shinyServer(function(input,output,session) {
     
     showModal(modalDialog(
       title = p('Eastern Pacific leatherback predictions for ', predictmonth, predictyear),
-      div(img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"), height = '600px', width = '800px')),
+      div(img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"),  height = 'auto', width = '100%')),
       br(),
       downloadButton("downloadstatic","Download Static Map"),
       easyClose = TRUE,
