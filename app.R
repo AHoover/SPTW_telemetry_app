@@ -244,7 +244,8 @@ ui <- fluidPage(
                         fluidRow(
                                   br(),
                                   column(width = 2, 
-                                        a(class = "two", "Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center; color:black; background-color:lavender; padding:15px;border-radius:10px; font-size:110%",
+                                        a(class = "two", "Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center; color:black; background-color:lavender; padding:15px;border-radius:10px;font-size:110%",
+                                  br(),
                                   br(),
                                   actionButton("StaticMap", strong(HTML("Download <br/> Static Map")), style = "color: black; background-color:white; border-color: #a2b03a; box-shadow: 5px 5px #a2b03a; border: 2px solid #a2b03a"),
                                   br(),
@@ -261,7 +262,7 @@ ui <- fluidPage(
                                 color: #ffb93f;
                                 background-color: inherit;
                                 font-weight: bold;
-                                font-size:105%}"),
+                                font-size:100%}"),
                               tags$head(tags$style(".modal-dialog{width:825px}")),
                                       ),
                               column(width = 10,
