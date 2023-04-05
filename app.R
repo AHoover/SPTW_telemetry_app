@@ -58,7 +58,7 @@ if(currentmonth > 1){
 
 predictmonth <<- month.name[previousmonth]
 
-month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
+month <- str_pad(match(predictmonth,month.name), 2, pad='0')
 message(paste("Prediction month is", predictmonth, "and month is", month))
 
 # Extract year of interest
@@ -72,7 +72,7 @@ if(currentmonth == 1){
   predictyear <- currentyear
 }
 
-year <<- predictyear
+year <- predictyear
 file_dater <- paste0(year,"_",month)
 
 ## Load Prediction; set color palette
@@ -209,8 +209,8 @@ ui <- fluidPage(
  waiterPreloader(html = waiting_screen, color = "#3c4b57"),
  
   titlePanel(h1("South Pacific TurtleWatch Model"), windowTitle = "SPTW Telemetry Model"),
-    navbarPage(title = div(img(src = "upwell_green_gray.png", style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55),"Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
-               id = "maptabs",
+    navbarPage(title = div(img(src = "upwell_green_gray.png", style="margin-top:0px;padding-left:4px;padding-bottom:10px;padding-top:2px", height = 55), "Eastern Pacific Leatherback Movement", style = "margin-top:-13px"),
+               id = "maptabs", 
                
                tabPanel("Prediction Map",
                         fluidRow(column(width = 2),
@@ -287,13 +287,15 @@ ui <- fluidPage(
                tabPanel("Interactive Map",
 
                         fluidRow(column(width = 2),
-                                 column(
+                                 div(class = "visible-sm-block visible-md-block visible-lg-block", 
+                                     column(
                                    br(),
                                    p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
                                    p("South Pacific TurtleWatch uses methods based upon",
                                      a(class = "two", href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
                                  br(),
                                  br(),
+                                 ),
                                  fluidRow(column(width = 12, 
                                                  tags$head(
                                                    tags$style(HTML("  .panel-heading {
@@ -306,10 +308,12 @@ ui <- fluidPage(
                                          }
                                        }"))),
                                                  suppressWarnings(bsCollapse(id = 'textpanels2', multiple = FALSE,                
-                                                            bsCollapsePanel(title = p('>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;text-align:left"), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
+                                                            bsCollapsePanel(title = p('>  Costa Rica Dome', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;text-align:left", div(class = "visible-sm-block visible-md-block visible-lg-block", p('[Ecologically or Biologically Significant Marine Area (EBSA)]', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;text-align:left"))), p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
 
                                                             bsCollapsePanel(title = p('>  Relative Risk of Interaction (Fisheries)', style = "padding:4px;background-size:200%;font-weight:bold;margin-top:0px;margin-bottom:0px;font-size:95%;text-align:left"), p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. These dynamic maps are part of recent work by Barbour et al.', HTML(paste0('(',em('In Review'),'). <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box.')))))))),
+                                 div(class = "visible-sm-block visible-md-block visible-lg-block", 
                           br(),
+                                 ),
                           hr(),
                         fluidRow(column(width = 2),
                           column(width = 8,
