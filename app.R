@@ -59,7 +59,7 @@ if(currentmonth > 1){
 predictmonth <<- month.name[previousmonth]
 
 month <<- str_pad(match(predictmonth,month.name), 2, pad='0')
-message(paste("Prediction month is",predictmonth, "and month is", month))
+message(paste("Prediction month is", predictmonth, "and month is", month))
 
 # Extract year of interest
 
