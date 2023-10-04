@@ -154,7 +154,7 @@ load(paste0("data/risk_g1-9_s123_", month, ".rda"))
 # Replace first instance of NA rasters to a low value to prevent leaflet from crashing when selecting gears that do not have any data
 for(i in 1:dim(riskstack)[3]){
   if(is.na(values(riskstack[[i]]))[1] == TRUE){
-    riskstack[[i]][1] = 0.0000001
+    riskstack[[i]][1] = 0
   }
 }
 
