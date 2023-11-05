@@ -12,7 +12,7 @@ options(curl_interrupt = FALSE)
 options(repos = c(CRAN = "https://cran.rstudio.com/")) # Set for running batch deployment
 httr::config(connecttimeout = 60)
 
-library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(maptools);library(rgdal);library(rgeos);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter);library(slickR);library(sf)
+library(rsconnect);library(shiny);library(leaflet);library(viridis);library(stringr);library(raster);library(tidyverse);library(RColorBrewer);library(shinycssloaders);library(shinyBS);library(htmlwidgets);library(shinyscreenshot);library(shinybusy);library(waiter);library(slickR);library(sf);library(terra)
 
 # Set a loading screen theme
 
@@ -83,7 +83,7 @@ tryCatch(
   
   exp = {
     
-    suppressWarnings(load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv))
+    predictspat = suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
     
   },
   
@@ -102,20 +102,20 @@ tryCatch(
     message(paste("Prediction month is", predictmonth, "and month is", month))
     message(paste("Most recent month's data unavailable."))
     
-    load(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.rda"), envir = .GlobalEnv)
+    predictspat = terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1]))
     
   }
 )
 
 ### Create color palette for prediction raster, which will be on the original plot
 
-palpredict <- colorNumeric("magma", values(predictraster), reverse=FALSE, na.color = "transparent")
+palpredict <- colorNumeric("magma", terra::values(predictspat), reverse=FALSE, na.color = "transparent")
 
 ## Load country and EEZ map data
 ### Subsets were created from marineregions.org
 
 PacificEEZ <- read_rds("data/PacificEEZs.rds") 
-crs(predictraster) = crs(PacificEEZ) # WKT compliant to remove errors
+# terra::crs(predictspat, describe=TRUE, proj=TRUE) = raster::crs(PacificEEZ) # WKT compliant to remove errors
 
 countriessubset <- read_rds("data/countriessubset.rds") 
 
@@ -138,12 +138,12 @@ allmpas <- read_rds("data/MPAs_WDPA_simplified.rds")
 
 ## Load GFW Fishing Effort at 0.1 degrees for 2017-2020
 
-fisheries <- stack("data/Effort_Fishing_01deg_2017-2020.tif")
+fisheries <- rast("data/Effort_Fishing_01deg_2017-2020.tif")
 names(fisheries) <- paste0(c("Effort2017", "Effort2018", "Effort2019", "Effort2020"))
 
 ## Load GFW Fishing Effort by Gear for 2020
 
-gear2020 <- stack("data/Effort_FishingByGear_01deg_2020.tif")
+gear2020 <- rast("data/Effort_FishingByGear_01deg_2020.tif")
 names(gear2020) <- c("Other_fishing_gears", "Squid_jigger", "Trawlers", "Set_longlines", "Other_purse_seines", "Tuna_purse_seines", "Drifting_longlines", "Purse_seines", "Pole_and_line", "Set_gillnets", "Trollers")
 
 ## Load Hidden Markov Model Relative Risk of Interaction Analysis and analysis area
@@ -153,7 +153,7 @@ load(paste0("data/risk_g1-9_s123_", month, ".rda"))
 
 # Replace first instance of NA rasters to a low value to prevent leaflet from crashing when selecting gears that do not have any data
 for(i in 1:dim(riskstack)[3]){
-  if(is.na(values(riskstack[[i]]))[1] == TRUE){
+  if(is.na(terra::values(riskstack[[i]]))[1] == TRUE){
     riskstack[[i]][1] = 0
   }
 }
@@ -324,7 +324,7 @@ ui <- fluidPage(
                                                  suppressWarnings(bsCollapse(id = 'textpanels2', multiple = FALSE,
                                                             bsCollapsePanel(title = '>  Costa Rica Dome [Ecologically or Biologically Significant Marine Area (EBSA)]', p('The Costa Rica Dome is an important habitat area - a biological hotspot - for many marine species, such as fisheries-important tuna and blue whales that breed and calve in the area, because upwelling brings cold, nutrient-rich waters to the Dome. It forms a migratory corridor for leatherbacks leaving Costa Rican nesting beaches. The female leatherbacks departing these Costa Rican nesting beaches are critical to the survival of the species, and thus, this area should be avoided when leatherbacks are more likely to be using this corridor. It is important to note the Costa Rica Dome on the map (light blue area) is an average position of the Costa Rica Dome throughout a given year. It is not a stationary feature; each year it strengthens and moves offshore as it grows, beginning near the coast in February, building and moving offshore around the middle of the year, and disappearing around December before the yearly cycle begins again.')),
 
-                                                            bsCollapsePanel('>  Relative Risk of Interaction (Fisheries)', p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. More information on these dynamic maps can be found in Barbour et al. (2023): ', a(class = "two", em("Incorporating multidimensional behavior into a risk management tool for a critically endangered and migratory species"), href = "https://doi.org/10.1111/cobi.14114", target = "_blank", .noWS = "outside"), HTML(paste0('. <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box.')))))))),
+                                                            bsCollapsePanel('>  Relative Risk of Interaction (Fisheries)', p('Monthly relative risk of interaction is calculated for Eastern Pacific leatherbacks in different behavioral states:', HTML("<ul><li>S1 - transiting</li><li>S2 - residential/foraging</li><li>S3 - deep diving/exploratory</li></ul>"), 'These are currently provided for GFW gear types: drifting (pelagic) longline, fishing, purse seines, pole and line, set gillnets, set longlines, squid jiggers, trawlers, and tuna purse seines. Missing maps indicate no data are available for selected fishing gear behavioral state. More information on these dynamic maps can be found in Barbour et al. (2023): ', a(class = "two", em("Incorporating multidimensional behavior into a risk management tool for a critically endangered and migratory species"), href = "https://doi.org/10.1111/cobi.14114", target = "_blank", .noWS = "outside"), HTML(paste0('. <br><br>The fisheries risk zone represents the bounding box for the risk analysis. The risk analysis does not examine interaction between fisheries and leatherbacks outside this box. <br><br> Maps showing as "NA" in the legend do not have enough data to generate risk maps for the month and fishing gear of interest.')))))))),
                                  div(class = "visible-sm-block visible-md-block visible-lg-block", 
                           br(),
                                  ),
@@ -499,8 +499,8 @@ server <- shinyServer(function(input,output,session) {
   output$prediction <- renderLeaflet({
     
     leaflet() %>% addTiles() %>%
-    addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>% # Use FALSE if error in palette occurs
-    addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>%
+    addRasterImage(predictspat, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>% # Use FALSE if error in palette occurs
+    addLegend(pal = palpredict, values = terra::values(predictspat), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
       addMapPane("EBSAs_small", zIndex = 430) %>% 
@@ -588,13 +588,13 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$opacity, {
     
     proxy %>% clearGroup(group = "predictionmap") %>%
-      addRasterImage(predictraster, colors = palpredict, opacity = input$opacity, maxBytes=40 * 1024 * 1024, group = "predictionmap")
+      addRasterImage(predictspat, colors = palpredict, opacity = input$opacity, maxBytes=40 * 1024 * 1024, group = "predictionmap")
     
   })
   
   observeEvent(input$GFWPlots, {
     
-    colorpal <- reactive({colorBin(input$colors, values(filteredmap()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()),na.rm=T))), na.color = "transparent")})
+    colorpal <- reactive({colorBin(input$colors, terra::values(filteredmap()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(terra::values(filteredmap()),na.rm=T))), na.color = "transparent")})
     
     updateCheckboxInput(session = session, inputId = "PlotGear", value = is.null(input$PlotGear))
     
@@ -609,14 +609,14 @@ server <- shinyServer(function(input,output,session) {
         proxy %>%
           removeControl(legend) %>% # Removes legend on year change
           addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
-          addLegend(pal = pal, values = values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+          addLegend(pal = pal, values = terra::values(filteredmap()), title = paste("Fishing Effort <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
       
     }
   })
   
   observeEvent(input$GFWPlots, {
     
-    colorpal2 <- reactive({colorBin(input$colors, values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(values(filteredmap()), na.rm=T))), na.color = "transparent")})
+    colorpal2 <- reactive({colorBin(input$colors, terra::values(filteredmap()),  bins = c(0.1, 0.5, 2.5, 10, 20, 40, 80, 120, ceiling(max(terra::values(filteredmap()), na.rm=T))), na.color = "transparent")})
     
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") 
     
@@ -630,7 +630,7 @@ server <- shinyServer(function(input,output,session) {
         proxy %>%
           removeControl(legend) %>% 
           addRasterImage(filteredmap(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
-          addLegend(pal = pal, values = values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+          addLegend(pal = pal, values = terra::values(filteredmap()),title = paste("Fishing Effort >= 0.1 <br> ", parse_number(names(filteredmap()))), group = "Fisheries.group", layer = "Fisherieslegend")})
       
     }
   })
@@ -638,7 +638,7 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$PlotGear, {
     
     paletterev <- rev(viridis(6))
-    colorpal <- reactive({colorBin(paletterev, values(filteredgear()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 120, ceiling(max(values(filteredgear()),na.rm=T))), na.color = "transparent")})
+    colorpal <- reactive({colorBin(paletterev, terra::values(filteredgear()), bins = c(0, 0.1, 0.5, 2.5, 10, 20, 40, 120, ceiling(max(terra::values(filteredgear()),na.rm=T))), na.color = "transparent")})
     
     proxy %>% clearGroup(group = "Fisheries.group") %>% removeControl("Fisherieslegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend")
     
@@ -653,7 +653,7 @@ server <- shinyServer(function(input,output,session) {
           removeControl(legend) %>% 
           clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% 
           addRasterImage(filteredgear(), color = pal, opacity = 0.9, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Fisheries.group", project = FALSE) %>%
-          addLegend(pal = pal, values = values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
+          addLegend(pal = pal, values = terra::values(filteredgear()), title = paste("2020 Fishing Effort <br> ", sub("_"," ", names(filteredgear()))), group = "Fisheries.group", layer = "Fisherieslegend")})
       
     }
   })
@@ -689,14 +689,14 @@ server <- shinyServer(function(input,output,session) {
     
     observe({
       
-      colorpalrisk <- reactive({colorNumeric(sptw_brewer_pal(n = 5, input$colorsRisk), c(min(values(filteredriskgear()), na.rm=T), max(values(filteredriskgear()), na.rm=T)), na.color = "#abd2e1")}) # na.rm=F was crashing shiny
+      colorpalrisk <- reactive({colorNumeric(sptw_brewer_pal(n = 5, input$colorsRisk), c(min(terra::values(filteredriskgear()), na.rm=T), max(terra::values(filteredriskgear()), na.rm=T)), na.color = "#abd2e1")}) # na.rm=F was crashing shiny
         
       pal <- colorpalrisk()
       
       proxy %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>%
         removeControl(legend) %>% # Removes legend on gear change
         addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group", project = FALSE) %>%
-        addLegend(pal = pal, values = values(filteredriskgear()), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright", labFormat =  function(type, cuts, p) {n = length(cuts);cuts[n] = paste("Higher Risk"); for(i in 2:(n-1)){cuts[i] = ""};cuts[1] = paste("Lower Risk");cuts[2]=cuts[2]; paste0(cuts[-n], cuts[-1])}) %>% 
+        addLegend(pal = pal, values = terra::values(filteredriskgear()), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright", labFormat =  function(type, cuts, p) {n = length(cuts);cuts[n] = paste("Higher Risk"); for(i in 2:(n-1)){cuts[i] = ""};cuts[1] = paste("Lower Risk");cuts[2]=cuts[2]; paste0(cuts[-n], cuts[-1])}) %>% 
         showGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))})
     
   })
@@ -704,8 +704,8 @@ server <- shinyServer(function(input,output,session) {
   observeEvent(input$hideFisheriesRisk, {
     
     leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>%
-      addRasterImage(predictraster, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>%
-      addLegend(pal = palpredict, values = values(predictraster), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>% 
+      addRasterImage(predictspat, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>%
+      addLegend(pal = palpredict, values = terra::values(predictspat), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>% 
       hideGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) # Replot the prediction raster; clear and replot if button is double-clicked 
     
     updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9, "Other fishing gears" = 2), selected = "Drifting longlines") 
