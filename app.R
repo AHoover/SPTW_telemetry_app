@@ -48,7 +48,7 @@ tags$style(
 # Extract month (most-recent month with data available) and year of interest
 
 currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
-message(paste("Current month is",currentmonth))
+message(paste("Current month is", currentmonth))
 
 if(currentmonth > 1){
   previousmonth <- currentmonth - 1
@@ -83,7 +83,8 @@ tryCatch(
   
   exp = {
     
-    predictspat = suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
+    predictintensity <- suppressWarnings(rast(paste0('data/intensity_',year,month,'.tif')))
+    predictspat <- suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
     
   },
   
@@ -91,8 +92,8 @@ tryCatch(
   
   error = function(e){
     
-    year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')
-    month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')
+    year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')[1]
+    month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')[1]
     file_dater <- paste0(year,"_", month)
     
     # Reset prediction year and month for later code 
@@ -102,14 +103,30 @@ tryCatch(
     message(paste("Prediction month is", predictmonth, "and month is", month))
     message(paste("Most recent month's data unavailable."))
     
-    predictspat = terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1]))
+    predictspat <<- suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
+    predictintensity <<- suppressWarnings(terra::rast(paste0('data/intensity_', year, month,'.tif')))
     
   }
 )
 
-### Create color palette for prediction raster, which will be on the original plot
+## For the purposes of the presentation, create a higher resolution map
+predictintensity = disagg(predictintensity, fact = 5)
+
+### Create color palette for intensity prediction raster, which will be on the original plot
+palpredictint <- colorNumeric("viridis", terra::values(predictintensity), reverse=FALSE, na.color = "transparent")
+palpredictint <- colorBin('viridis', terra::values(predictintensity), bins = c(-999,0.17,0.19,0.21,0.23,0.26,999), na.color = "transparent")
+
+# Create labels for legend
+labeller <- function(type, breaks) {
+  return(c("0 to 0.17","0.17 to 0.19","0.19 to 0.21",
+           "0.21 to 0.23","0.23 to 0.26", "0.26 above"))
+}
 
 palpredict <- colorNumeric("magma", terra::values(predictspat), reverse=FALSE, na.color = "transparent")
+
+# Change projection of raster to match that required for addRasterImage
+## 'addRasterImage currently works only with EPSG:3857 Web Mercator)'
+predictintensity = project(predictintensity, 'EPSG:3857')
 
 ## Load country and EEZ map data
 ### Subsets were created from marineregions.org
@@ -224,9 +241,9 @@ ui <- fluidPage(
                         fluidRow(column(width = 2),
                                  column(
                                    br(),
-                                   p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
+                                   p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry and Fisheries Observation Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
                                    p("South Pacific TurtleWatch uses methods based upon",
-                                     a(class = "two", href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"),style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
+                                     a(class = "two", href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"),'and', a(class = "two", href = "https://esajournals.onlinelibrary.wiley.com/doi/10.1002/ecs2.4375", target = "_blank", em("Integrating telemetry and point observations to inform management and conservation of migratory marine species"), target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
                                  br(),
                                  br(),
                                  fluidRow(column(width = 12, 
@@ -245,7 +262,7 @@ ui <- fluidPage(
                                                                    }"))),
                                                  suppressWarnings(bsCollapse(id = 'textpanels', multiple = FALSE,
                                                             
-                                                            bsCollapsePanel('>  What is South Pacific TurtleWatch?', p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current model shown below is based on data from satellite-tagged leatherbacks. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, will eventually be added. More information can be found in ', a(class = "two", em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
+                                                            bsCollapsePanel('>  What is South Pacific TurtleWatch?', p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current residency time model shown below is based on data from satellite-tagged leatherbacks alone. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. The leatherback intensity model combines these data from satellite-tagged leatherbacks with fisheries observations to estimate leatherback intensity (\u03BB) (density of locations per unit area) based on monthly environmental conditions. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, may eventually be added. More information can be found in ', a(class = "two", em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
                                                             bsCollapsePanel('>  Leatherback Tagging', p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).')))))),
                         br(),
                         hr(),
@@ -258,7 +275,10 @@ ui <- fluidPage(
                                         a(class = "two", "Download South Pacific TurtleWatch Data", href = "https://github.com/AHoover/SPTW_telemetry_app/", target = "_blank"), style = "text-align:center; color:black; background-color:lavender; padding:15px;border-radius:10px;font-size:110%",
                                   br(),
                                   br(),
-                                  actionButton("StaticMap", strong(HTML("Download <br/> Static Map")), style = "color: black; background-color:white; border-color: #a2b03a; box-shadow: 5px 5px #a2b03a; border: 2px solid #a2b03a"),
+                                  actionButton("StaticMap", strong(HTML("Download <br/> Residency <br/>Map")), style = "color: black; background-color:white; border-color: #a2b03a; box-shadow: 5px 5px #a2b03a; border: 2px solid #a2b03a"),
+                                  br(),
+                                  br(),
+                                  actionButton("StaticMap2", strong(HTML("Download <br/> Intensity <br/>Map")), style = "color: black; background-color:white; border-color: #a2b03a; box-shadow: 5px 5px #a2b03a; border: 2px solid #a2b03a"),
                                   br(),
                                   br(),
                                   actionButton(inputId = "moveToInteractive", label = HTML("Want a deeper dive? <br/> Try our interactive <br/> map")),
@@ -278,6 +298,8 @@ ui <- fluidPage(
                                       ),
                               column(width = 10,
                                         div(class="img-fluid img-thumbnail", img(src = paste0("Prediction_", month.abb[as.numeric(month)], year, "_0.1deg.jpg"), height = 'auto', width = '100%',style ="display:block")), p("Leatherback Residence Time (Days) along the Eastern Pacific", style = "color:#A2B03A;padding:2px;padding-left:20px;margin-top:10px;font-size:105%;margin-top:0px;text-align:left"),
+                                     br(),
+                                     div(class="img-fluid img-thumbnail", img(src = paste0("Intensity_prediction_", month.abb[as.numeric(month)], year, ".jpg"), height = 'auto', width = '100%',style ="display:block")), p("Leatherback Intensity (\u03BB) along the Eastern Pacific", style = "color:#A2B03A;padding:2px;padding-left:20px;margin-top:10px;font-size:105%;margin-top:0px;text-align:left"),
                                         ),
                                     ),
                                     br(),
@@ -301,9 +323,9 @@ ui <- fluidPage(
                                  div(class = "visible-sm-block visible-md-block visible-lg-block", 
                                      column(
                                    br(),
-                                   p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
+                                   p(h2("Predicting Eastern Pacific Leatherback Movement Using Telemetry and Fisheries Observation Data", style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-weight:bold")),
                                    p("South Pacific TurtleWatch uses methods based upon",
-                                     a(class = "two", href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
+                                     a(class = "two", href = "https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecs2.2644", target = "_blank", em("Predicting residence time using a continuous‐time discrete‐space model of leatherback turtle satellite telemetry data"), target = "_blank"), 'and', a(class = "two", href = "https://esajournals.onlinelibrary.wiley.com/doi/10.1002/ecs2.4375", target = "_blank", em("Integrating telemetry and point observations to inform management and conservation of migratory marine species"), target = "_blank"), style = "text-align:center;color:black;background-color:lavender;padding:15px;border-radius:10px;font-size:110%"), width = 8),
                                  br(),
                                  br(),
                                  ),
@@ -404,7 +426,8 @@ ui <- fluidPage(
                          label = HTML("Clear <br/>Fishing <br/>Effort"), style = "font-weight:bold;text-align:center;font-size:105%;color:#a2b03a;padding:15px;border:2px;box-shadow: 0 0 11px 2px #a2b03a;/* box-shadow: 0 0 black; */box-shadow: 4px 4px 20px 4px #a2b03a")),
                    br(),
                    br(),
-                   sliderInput("opacity", HTML("Residence Time Opacity <br/>(No Map &#8596 Visible Map)"), min = 0, max = 1, value = 0.7, step = 0.1),
+                   sliderInput("opacity", HTML("Intensity <br/>(No Map &#8596 Visible Map)"), min = 0, max = 1, value = 0.7, step = 0.1),
+                   sliderInput("opacity_residence", HTML("Residence Time Opacity <br/>(No Map &#8596 Visible Map)"), min = 0, max = 1, value = 0.7, step = 0.1),
                    actionButton("usermap", label = strong(HTML("Download <br/>User Map")), style="color: black; background-color:white;border-color:#a2b03a;box-shadow: 5px 5px #a2b03a;border:2px solid #a2b03a;
                         "),
                    hr(style="border-color:#cd6ebe;opacity:0.2"),
@@ -499,8 +522,10 @@ server <- shinyServer(function(input,output,session) {
   output$prediction <- renderLeaflet({
     
     leaflet() %>% addTiles() %>%
-    addRasterImage(predictspat, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>% # Use FALSE if error in palette occurs
-    addLegend(pal = palpredict, values = terra::values(predictspat), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>%
+    addRasterImage(predictintensity, colors = palpredictint, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "Intensity") %>% # Use FALSE if error in palette occurs
+    addLegend(pal = palpredictint, values = terra::values(predictintensity), title = "Intensity \u03BB ", layer = "Predictionlegend", labFormat = labeller, group = "Intensity") %>%
+      addRasterImage(predictspat, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "Residence Time") %>%
+      addLegend(pal = palpredict, values = terra::values(predictspat), title = "Residence <br>Time (Days)", layer = "Predictionlegend_tel", group = "Residence Time") %>%
       addMapPane("country", zIndex = 400) %>% 
       addMapPane("EBSAs", zIndex = 420) %>% 
       addMapPane("EBSAs_small", zIndex = 430) %>% 
@@ -518,9 +543,9 @@ server <- shinyServer(function(input,output,session) {
       # Add layer controls
       addLayersControl(
         position = "bottomleft",
-        overlayGroups = c("EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')),
+        overlayGroups = c("Intensity", "Residence Time","EBSAs", "Costa Rica Dome <br>EBSA", "MPAs and Other <br>Protected Areas", "EEZs", "Countries", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')),
         options = layersControlOptions(collapsed = FALSE)) %>% 
-      hideGroup(c("EBSAs", "MPAs and Other <br>Protected Areas", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))) %>%
+      hideGroup(c("Residence Time","EBSAs", "MPAs and Other <br>Protected Areas", HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))) %>%
       htmlwidgets::onRender("
         function() {
             $('.leaflet-control-layers-overlays').prepend('<label style=\"text-align:center;font-weight:bold;font-size:110%;margin-bottom:-2px;margin-right:-2px;\">Areas of Interest<br/></label>');
@@ -579,6 +604,20 @@ server <- shinyServer(function(input,output,session) {
     
     })
   
+  observeEvent(input$StaticMap2, {
+    
+    showModal(modalDialog(
+      title = p('Eastern Pacific leatherback intensity predictions for ', predictmonth, predictyear),
+      div(img(src = paste0("Intensity_prediction_", month.abb[as.numeric(month)], year, ".jpg"),  height = 'auto', width = '100%')),
+      br(),
+      downloadButton("downloadstatic","Download Static Map"),
+      easyClose = TRUE,
+      fade = TRUE,
+      footer = NULL
+    ))
+    
+  })
+  
   output$downloadstatic <- downloadHandler(
     filename = paste0("Leatherback_Residence_", predictmonth, year, ".jpg"),
     content = function(file) {
@@ -587,8 +626,15 @@ server <- shinyServer(function(input,output,session) {
 
   observeEvent(input$opacity, {
     
-    proxy %>% clearGroup(group = "predictionmap") %>%
-      addRasterImage(predictspat, colors = palpredict, opacity = input$opacity, maxBytes=40 * 1024 * 1024, group = "predictionmap")
+    proxy %>% clearGroup(group = "Intensity") %>%
+      addRasterImage(predictintensity, colors = palpredictint, opacity = input$opacity, maxBytes=40 * 1024 * 1024, group = "Intensity")
+    
+  })
+  
+  observeEvent(input$opacity_residence, {
+    
+    proxy %>% clearGroup(group = "Residence Time") %>%
+      addRasterImage(predictspat, colors = palpredict, opacity = input$opacity_residence, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "Residence Time")
     
   })
   
@@ -682,7 +728,7 @@ server <- shinyServer(function(input,output,session) {
   
   observeEvent(input$PlotRisk, {
     
-    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") # %>% clearGroup(group = "Fisheries.group") 
+    proxy %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>% removeControl("Fisherieslegend") %>% clearGroup("Intensity") %>% removeControl("Predictionlegend") %>% clearGroup("Residence Time") %>% removeControl("Predictionlegend_tel") # %>% clearGroup(group = "Fisheries.group") 
     
     
     updateRadioButtons(session = session, "GFWPlots", strong("Plot:"), choices = c("Fishing Effort" = 1, "Fishing Effort > 0.1" = 2), selected = character(0))
@@ -693,20 +739,22 @@ server <- shinyServer(function(input,output,session) {
         
       pal <- colorpalrisk()
       
-      proxy %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>%
+      proxy %>% clearGroup("Intensity") %>% removeControl("Predictionlegend")  %>% clearGroup("Residence Time") %>% removeControl("Predictionlegend_tel") %>% 
         removeControl(legend) %>% # Removes legend on gear change
         addRasterImage(filteredriskgear(), color = pal, opacity = 1, maxBytes = 40 * 1024 * 1024, layerId = "foo", group = "Risk.group", project = FALSE) %>%
         addLegend(pal = pal, values = terra::values(filteredriskgear()), title = paste(HTML('<label style=\"color:rgb(253, 107, 49);margin-bottom: 0px;\">Relative Risk <br>of Interaction <br></label>'),'<br>', p(legendfilteredrisk(), style = "text-align:center;color:#FD6B31")), group = "Risk.group", layer = "Risklegend", position = "bottomright", labFormat =  function(type, cuts, p) {n = length(cuts);cuts[n] = paste("Higher Risk"); for(i in 2:(n-1)){cuts[i] = ""};cuts[1] = paste("Lower Risk");cuts[2]=cuts[2]; paste0(cuts[-n], cuts[-1])}) %>% 
-        showGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'))})
+        hideGroup(c('Intensity','Residence Time')) %>% 
+        showGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) })
     
   })
   
   observeEvent(input$hideFisheriesRisk, {
     
-    leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup("predictionmap") %>% removeControl("Predictionlegend") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>%
-      addRasterImage(predictspat, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "predictionmap") %>%
-      addLegend(pal = palpredict, values = terra::values(predictspat), title = "Residence <br>Time (Days)", layer = "Predictionlegend") %>% 
-      hideGroup(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>')) # Replot the prediction raster; clear and replot if button is double-clicked 
+    leafletProxy("prediction") %>% removeShape("foo") %>% clearGroup("Intensity") %>% removeControl("Predictionlegend") %>% clearGroup("Residence Time") %>% removeControl("Predictionlegend_tel") %>% clearGroup(group = "Risk.group") %>% removeControl("Risklegend") %>%
+      addRasterImage(predictintensity, colors = palpredictint, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "Intensity") %>% # Use FALSE if error in palette occurs
+      addLegend(pal = palpredictint, values = terra::values(predictintensity), title = "Intensity \u03BB ", layer = "Predictionlegend", labFormat = labeller, group = "Intensity") %>% 
+      addRasterImage(predictspat, colors = palpredict, opacity = 0.7, maxBytes = 40 * 1024 * 1024, project = TRUE, group = "Residence Time") %>%
+      hideGroup(c(HTML('<span style=\"color:rgb(253, 107, 49);\">Fisheries Risk Zone</span>'), 'Residence Time')) %>% showGroup('Intensity') # Replot the prediction raster; clear and replot if button is double-clicked 
     
     updateSelectInput(session, "Riskfishinggear", label = "Fishing Gear", choices = c("Drifting longlines" = 1, "Purse seines" = 3, "Pole and line" = 4, "Set gillnets" = 5, "Set longlines" = 6, "Squid jiggers" = 7, "Trawlers" = 8, "Tuna purse seines" = 9, "Other fishing gears" = 2), selected = "Drifting longlines") 
                       
