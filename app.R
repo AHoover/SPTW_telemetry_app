@@ -48,7 +48,7 @@ tags$style(
 # Extract month (most-recent month with data available) and year of interest
 
 currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
-message(paste("Current month is",currentmonth))
+message(paste("Current month is", currentmonth))
 
 if(currentmonth > 1){
   previousmonth <- currentmonth - 1
@@ -83,8 +83,8 @@ tryCatch(
   
   exp = {
     
-    predictintensity = suppressWarnings(rast('data/intensity_202310.tif'))
-    predictspat = suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
+    predictintensity <- suppressWarnings(rast(paste0('data/intensity_',year,month,'.tif')))
+    predictspat <- suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
     
   },
   
@@ -92,8 +92,8 @@ tryCatch(
   
   error = function(e){
     
-    year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')
-    month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')
+    year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')[1]
+    month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')[1]
     file_dater <- paste0(year,"_", month)
     
     # Reset prediction year and month for later code 
@@ -103,8 +103,8 @@ tryCatch(
     message(paste("Prediction month is", predictmonth, "and month is", month))
     message(paste("Most recent month's data unavailable."))
     
-    predictspat = terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1]))
-    predictintensity = rast('data/intensity_202310.tif')
+    predictspat <<- suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
+    predictintensity <<- suppressWarnings(terra::rast(paste0('data/intensity_', year, month,'.tif')))
     
   }
 )
@@ -262,7 +262,7 @@ ui <- fluidPage(
                                                                    }"))),
                                                  suppressWarnings(bsCollapse(id = 'textpanels', multiple = FALSE,
                                                             
-                                                            bsCollapsePanel('>  What is South Pacific TurtleWatch?', p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current model shown below is based on data from satellite-tagged leatherbacks. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, will eventually be added. More information can be found in ', a(class = "two", em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
+                                                            bsCollapsePanel('>  What is South Pacific TurtleWatch?', p('South Pacific TurtleWatch is a collaborative effort to understand the habitat utilization of adult Eastern Pacific leatherbacks to better management and conservation goals of this highly migratory species. This tool is updated monthly, offering stakeholders and the public near real-time estimates of leatherback movements. It offers the opportunity for dynamic ocean management, management that changes with time and space; people and animals utilize given areas differently as their surrounding environment changes, but most management areas are static and cannot take into consideration the frequent movements of highly migratory species. We have multiple models under development, which examine and predict the movements of these critically endangered marine megafauna, each offering a unique perspective of leatherback species distribution based on available information. The current residency time model shown below is based on data from satellite-tagged leatherbacks alone. It predicts the amount of time leatherbacks are expected to spend in a given area based on environmental factors - factors that play a role in their movements. Darker colors indicate leatherbacks would move more quickly through a region, while lighter colors indicate slower movements, prolonging their time spent in an area. The enviromental components can be viewed in the second tab in the top navigation bar. The leatherback intensity model combines these data from satellite-tagged leatherbacks with fisheries observations to estimate leatherback intensity (\u03BB) (density of locations per unit area) based on monthly environmental conditions. A leatherback habitat utilization map developed using fisheries observations, sightings or interactions from fishing vessels, may eventually be added. More information can be found in ', a(class = "two", em("Using fisheries observation data to develop a predictive species distribution model for endangered sea turtles"), href = "https://doi.org/10.1111/csp2.349", target = "_blank", .noWS = "outside"), ".")),
                                                             bsCollapsePanel('>  Leatherback Tagging', p('Eastern Pacific leatherbacks were satellite-tagged with between 2003 and 2014. This telemetry, or remotely-sensed, data are pivotal in understanding when and where leatherbacks move because the ocean is a vast area, far from other means of observation. Satellite tags provided an average of half a year of leatherback movement, with the longest track spanning nearly 1.5 years. Leatherback tracks that went into the model were based on daily location estimates from these tags. We only included periods when leatherbacks were not breeding. Because they behave much differently when breeding, our prediction estimates presented here do not fully capture slow-moving coastal leatherbacks during nesting times (approximately October - March).')))))),
                         br(),
                         hr(),
