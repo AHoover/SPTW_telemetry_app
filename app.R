@@ -92,19 +92,19 @@ tryCatch(
   
   error = function(e){
     
-    year <<- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')[1]
-    month <<- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')[1]
+    year <- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')[1]
+    month <- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')[1]
     file_dater <- paste0(year,"_", month)
     
     # Reset prediction year and month for later code 
     
-    predictyear <<- year
-    predictmonth <<- month.name[as.numeric(month)]
+    predictyear <- year
+    predictmonth <- month.name[as.numeric(month)]
     message(paste("Prediction month is", predictmonth, "and month is", month))
     message(paste("Most recent month's data unavailable."))
     
-    predictspat <<- suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
-    predictintensity <<- suppressWarnings(terra::rast(paste0('data/intensity_', year, month,'.tif')))
+    predictspat <- suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
+    predictintensity <- suppressWarnings(terra::rast(paste0('data/intensity_', year, month,'.tif')))
     
   }
 )
