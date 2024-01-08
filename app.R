@@ -444,7 +444,7 @@ ui <- fluidPage(
                fluidRow(column(width = 2),
                         column(
                           br(),
-                          p("Satellite data are incorporated into the model framework that predicts leatherback movement in the Eastern Pacific region; these data include sea surface temperature (SST), front density index (Front Density), sea surface height (SSH), and bathymetry", style = "color:black;text-align:center"), style = "text-align:justify;color:black;background-color:lavender;padding:10px;border-radius:10px;font-size: 120%", width = 8)),
+                          p("Satellite data are incorporated into the model frameworks that predicts leatherback movement in the Eastern Pacific region; these data include sea surface temperature (SST), front density index (Front Density), sea surface height (SSH), bathymetry, and chlorophyll-a (Chla: intensity map only)", style = "color:black;text-align:center"), style = "text-align:justify;color:black;background-color:lavender;padding:10px;border-radius:10px;font-size: 120%", width = 8)),
                 br(),
                 hr(),
                 h2(p('Monthly environmental data for', style = "color:black;text-align:center; font-size: 125%; font-weight: bold")), h2(p(predictmonth,predictyear, style = "color:#a2b03a;text-align:center; padding: 0px;font-size: 125%; font-weight: bold")),
@@ -498,7 +498,16 @@ ui <- fluidPage(
                                        column(p("Bathymetry (m) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:left;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
                                     width = 12),
                     br(),
-                    ))
+                    )),
+                tabPanel('Chla',
+                         br(),
+                         br(),
+                         fluidRow(column(width = 1), column(
+                           div(class="img-fluid img-thumbnail",img(src = paste0("chl_05deg_",year,"_",month,".jpg"), height = 'auto', width = '100%'),style = "text-align: center"), 
+                           column(p("Chlorophyll-a (mg/m<sup>3</end>) along the Eastern Pacific with Exclusive Economic Zones (shown in gray)", style = "text-align:left;color:#A2B03A;padding:2px;font-size: 105%"), width = 12),
+                           width = 12),
+                           br(),
+                         ))
 
                   )
       )
