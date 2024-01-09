@@ -309,12 +309,6 @@ ui <- fluidPage(
                                                     width = 10)),
                         br(),
                         br(),
-                        # fluidRow(column(width = 2),
-                        #          column(width = 10,
-                        #          textOutput("slickrImgName"),
-                        #          slickROutput("slickr", width = '500px'))),
-                        # br(),
-                        # br(),
                )),
                  
                tabPanel("Interactive Map",
@@ -510,7 +504,20 @@ ui <- fluidPage(
                          ))
 
                   )
-      )
+      ),
+      tabPanel('Archived Images',
+               tabsetPanel(
+                 tabPanel('Residence Time Maps',
+                 fluidRow(
+                   br(),
+                   br(),
+                   slickROutput("slickr", width = '992px', height = '745px'))),
+                 tabPanel('Intensity Maps',
+                   br(),
+                   br(),
+                 fluidRow(slickROutput("slickr2", width = '992px', height = '745px'))
+               )
+      ))
     ),
   div(class = "footer",
     includeHTML("www/mapfooter.html") # Add footer across all pages
@@ -771,19 +778,27 @@ server <- shinyServer(function(input,output,session) {
     
   })
   
-  # track_usage(storage_mode = store_json(path = "logs/"))
+  output$slickr <- renderSlickR({
+    imgs <- list.files("./Archive/", pattern="^Prediction", full.names = TRUE)
+    imgs <- data.frame(cbind(imgs,names = substr(imgs, 22, 28)))
+    imgs$imgs_fac = factor(substr(imgs$names, 1, 3), levels = month.abb, ordered=TRUE)
+    imgs <- imgs[order(imgs$imgs_fac), ]
+    (slickR(imgs$names, slideType = 'p', slideId = "sld1") + settings(arrows = FALSE) ) %synch%
+    (slickR(imgs$imgs, width = '992px', height = '745px', slideId = "sld1")+ 
+        settings(dots = TRUE))
+  })
   
-  # output[["slickr"]] <- renderSlickR({
-
-  #   slickR(imgs)
-
-  # })
-
-  # output[["slickrImgName"]] <- renderText({
-
-    # paste0("CURRENT IMAGE: ", basename(imgs[input$slickr_output_current$.center]))
-
-  # })
+  output$slickr2 <- renderSlickR({
+    imgs2 <- list.files("./Archive/", pattern="^Intensity", full.names = TRUE)
+    imgs2 <- data.frame(cbind(imgs2, names = substr(imgs2, 32, 38)))
+    imgs2$imgs_fac = factor(substr(imgs2$names, 1, 3), levels = month.abb, ordered=TRUE)
+    imgs2 <- imgs2[order(imgs2$imgs_fac), ]
+    ( slickR(imgs2$names, slideType = 'p', slideId = "sld2") + settings(arrows = FALSE) ) %synch%
+      (slickR(imgs2$imgs2, width = '992px', height = '745px', slideId = "sld2")+ 
+        settings(dots = TRUE))
+  })
+  
+  # track_usage(storage_mode = store_json(path = "logs/"))
   
 })
 
