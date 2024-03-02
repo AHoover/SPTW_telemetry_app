@@ -47,18 +47,25 @@ tags$style(
 
 # Extract month (most-recent month with data available) and year of interest
 
-currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
-message(paste("Current month is", currentmonth))
+# currentmonth <- as.numeric(format(Sys.Date(), format="%m"))
+# message(paste("Current month is", currentmonth))
+# 
+# if(currentmonth > 1){
+#   previousmonth <- currentmonth - 1
+# } else{
+#   previousmonth <- 12
+# }
 
-if(currentmonth > 1){
-  previousmonth <- currentmonth - 1
-} else{
-  previousmonth <- 12
-}
+year <- str_extract(list.files('data/', pattern = 'Prediction'),'([0-9])+')[1]
 
-predictmonth <<- month.name[previousmonth]
+month <- str_pad(match(str_extract(list.files('data/', pattern = 'Prediction'), paste(month.abb, collapse="|")), month.abb), 2, pad='0')[1]
 
-month <- str_pad(match(predictmonth,month.name), 2, pad='0')
+file_dater <- paste0(year,"_", month)
+
+predictmonth <<- month.name[as.numeric(month)]
+# predictmonth <<- month.name[previousmonth]
+
+# month <- str_pad(match(predictmonth,month.name), 2, pad='0')
 message(paste("Prediction month is", predictmonth, "and month is", month))
 
 # Extract year of interest
@@ -66,14 +73,16 @@ message(paste("Prediction month is", predictmonth, "and month is", month))
 currentyear <- as.numeric(format(Sys.Date(), format="%Y"))
 message(paste("Current year is", currentyear))
 
-if(currentmonth == 1){
-  predictyear <- currentyear - 1
-} else{
-  predictyear <- currentyear
-}
+predictyear <- year
 
-year <- predictyear
-file_dater <- paste0(year,"_",month)
+# if(currentmonth == 1){
+#   predictyear <- currentyear - 1
+# } else{
+#   predictyear <- currentyear
+# }
+
+# year <- predictyear
+# file_dater <- paste0(year,"_",month)
 
 ## Load Prediction; set color palette
 ### Confirm data in folder is up-to-date for the most recent month.
@@ -100,7 +109,7 @@ tryCatch(
     
     predictyear <- year
     predictmonth <- month.name[as.numeric(month)]
-    message(paste("Prediction month is", predictmonth, "and month is", month))
+    message(paste("Prediction month is", predictmonth, "and month is", month, " Prediction year is", year))
     message(paste("Most recent month's data unavailable."))
     
     predictspat <- suppressWarnings(terra::rast(read_rds(paste0("data/Prediction_", month.abb[as.numeric(month)], year, "_0.1deg_spat.rds")[1])))
@@ -511,11 +520,17 @@ ui <- fluidPage(
                  fluidRow(
                    br(),
                    br(),
-                   slickROutput("slickr", width = '992px', height = '745px'))),
+                   slickROutput("slickr", width = '992px', height = '745px'),
+                   br(),
+                   br(),
+                   br(),
+                   p('These represent a subset of images created for this project.', style = "text-align:left;color:#A2B03A;padding:2px;font-size: 95%"))),
                  tabPanel('Intensity Maps',
                    br(),
                    br(),
-                 fluidRow(slickROutput("slickr2", width = '992px', height = '745px'))
+                 fluidRow(slickROutput("slickr2", width = '992px', height = '745px'),
+                   br(),
+                   br())
                )
       ))
     ),
@@ -779,8 +794,8 @@ server <- shinyServer(function(input,output,session) {
   })
   
   output$slickr <- renderSlickR({
-    imgs <- list.files("./Archive/", pattern="^Prediction", full.names = TRUE)
-    imgs <- data.frame(cbind(imgs,names = substr(imgs, 22, 28)))
+    imgs <- list.files("archive/", pattern="^Prediction", full.names = TRUE)
+    imgs <- data.frame(cbind(imgs,names = substr(imgs, 21, 27)))
     imgs$imgs_fac = factor(substr(imgs$names, 1, 3), levels = month.abb, ordered=TRUE)
     imgs <- imgs[order(imgs$imgs_fac), ]
     (slickR(imgs$names, slideType = 'p', slideId = "sld1") + settings(arrows = FALSE) ) %synch%
@@ -789,8 +804,8 @@ server <- shinyServer(function(input,output,session) {
   })
   
   output$slickr2 <- renderSlickR({
-    imgs2 <- list.files("./Archive/", pattern="^Intensity", full.names = TRUE)
-    imgs2 <- data.frame(cbind(imgs2, names = substr(imgs2, 32, 38)))
+    imgs2 <- list.files("archive/", pattern="^Intensity", full.names = TRUE)
+    imgs2 <- data.frame(cbind(imgs2, names = substr(imgs2, 31, 37)))
     imgs2$imgs_fac = factor(substr(imgs2$names, 1, 3), levels = month.abb, ordered=TRUE)
     imgs2 <- imgs2[order(imgs2$imgs_fac), ]
     ( slickR(imgs2$names, slideType = 'p', slideId = "sld2") + settings(arrows = FALSE) ) %synch%
